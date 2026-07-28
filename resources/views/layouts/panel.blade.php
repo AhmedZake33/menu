@@ -64,6 +64,7 @@
             @endif
 
             @yield('content')
+            <x-system-copyright class="panel-copyright" />
         </main>
     </div>
 </div>

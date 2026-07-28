@@ -31,6 +31,7 @@
             <main>
                 {{ $slot }}
             </main>
+            <x-system-copyright class="app-copyright" />
         </div>
     </body>
 </html>

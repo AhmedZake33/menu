@@ -43,7 +43,7 @@
             <div class="auth-card">
                 {{ $slot }}
             </div>
-            <p class="auth-copyright">© {{ date('Y') }} Digital Menu SaaS</p>
+            <x-system-copyright class="auth-copyright" />
         </section>
     </main>
 </body>

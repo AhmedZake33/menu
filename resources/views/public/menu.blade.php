@@ -179,7 +179,10 @@
     @endforeach
 </main>
 
-<footer class="text-center py-4 text-muted">منيو {{ $restaurant->name }} الإلكتروني</footer>
+<footer class="text-center py-4 text-muted">
+    <div>منيو {{ $restaurant->name }} الإلكتروني</div>
+    <x-system-copyright class="public-menu-copyright mb-0 mt-2" />
+</footer>
 </div>
 </body>
 </html>
