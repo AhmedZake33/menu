@@ -144,7 +144,7 @@
                             <div class="modal-dialog modal-dialog-centered modal-xl">
                                 <div class="modal-content image-preview-modal item-detail-preview-modal">
                                     <div class="modal-header">
-                                        <h2 class="modal-title fs-5">{{ $item->name }}</h2>
+                                        <span></span>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
                                     </div>
                                     <div class="modal-body public-item-preview">
