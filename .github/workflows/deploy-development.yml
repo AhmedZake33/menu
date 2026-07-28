@@ -1,7 +1,20 @@
-- name: Deploy to server
-  uses: appleboy/ssh-action@v1.2.0
-  with:
-    host: ${{ vars.SERVER_HOST }}
+name: Deploy Development
+
+on:
+  push:
+    branches:
+      - development
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+              host: ${{ vars.SERVER_HOST }}
     username: ${{ vars.SERVER_USER }}
     port: ${{ vars.SERVER_PORT }}
     key: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -10,16 +23,11 @@
 
       git fetch origin ${{ vars.BRANCH }}
       git reset --hard origin/${{ vars.BRANCH }}
-
-      composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-
-      npm ci
-      npm run build
-
-      php artisan migrate --force
-      php artisan optimize:clear
-      php artisan config:cache
-      php artisan route:cache
-      php artisan view:cache
-
-      chmod -R 775 storage bootstrap/cache
+            composer install --no-dev --no-interaction --optimize-autoloader
+            npm ci
+            npm run build
+            php artisan migrate --force
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
