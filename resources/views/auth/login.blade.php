@@ -21,7 +21,7 @@
             <div class="input-group input-group-lg auth-input">
                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                 <input id="email" class="form-control" type="email" name="email"
-                       value="{{ old('email') }}" placeholder="admin@example.com"
+                       value="{{ old('email') }}" placeholder="you@example.com"
                        required autofocus autocomplete="username">
             </div>
         </div>
@@ -58,10 +58,5 @@
     <div class="auth-security-row">
         <span><i class="bi bi-shield-lock-fill"></i> اتصال مشفر</span>
         <span><i class="bi bi-fingerprint"></i> حماية الحساب</span>
-    </div>
-
-    <div class="demo-credentials">
-        <i class="bi bi-info-circle"></i>
-        <div><strong>حساب المدير العام التجريبي</strong><span>admin@example.com / password</span></div>
     </div>
 </x-guest-layout>
