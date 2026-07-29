@@ -16,6 +16,7 @@ class QrCodeController extends Controller
         /** @var Restaurant $restaurant */
         $restaurant = request()->user()->restaurant;
         $url = route('public.restaurant', $restaurant);
+        $format = $service->format($format);
         $body = $service->render($url, $format);
 
         return response($body)
@@ -30,6 +31,7 @@ class QrCodeController extends Controller
         $url = $menuPage->is_default
             ? route('public.restaurant', $menuPage->restaurant)
             : route('public.menu', [$menuPage->restaurant, $menuPage]);
+        $format = $service->format($format);
         $body = $service->render($url, $format);
 
         return response($body)->header('Content-Type', $format === 'png' ? 'image/png' : 'image/svg+xml')->header('Content-Disposition', 'inline; filename="'.$menuPage->slug.'.'.$format.'"');

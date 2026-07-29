@@ -49,7 +49,7 @@
             </nav>
         </aside>
 
-        <main id="panelContent" class="col-lg-10 p-3 p-lg-4 panel-content-shell" data-panel-content>
+        <main id="panelContent" class="col-12 col-lg-10 p-3 p-lg-4 panel-content-shell" data-panel-content>
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
