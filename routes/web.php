@@ -10,10 +10,12 @@ use App\Http\Controllers\Dashboard\RestaurantSettingsController;
 use App\Http\Controllers\Dashboard\ThemeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicMenuController;
+use App\Http\Controllers\PublicOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
 Route::get('/r/{restaurant}', [PublicMenuController::class, 'restaurant'])->name('public.restaurant');
+Route::post('/r/{restaurant}/orders', [PublicOrderController::class, 'store'])->name('public.orders.store');
 Route::get('/r/{restaurant}/menu/{menuPage}', [PublicMenuController::class, 'menu'])->scopeBindings()->name('public.menu');
 Route::get('/menu/{restaurant}', [PublicMenuController::class, 'restaurant'])->name('public.short');
 
@@ -34,6 +36,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('restaurant-settings', [RestaurantSettingsController::class, 'update'])->name('restaurant-settings.update');
         Route::resource('menu-pages', MenuPageController::class)->except('show')->parameters(['menu-pages' => 'menuPage']);
         Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::get('orders', [\App\Http\Controllers\Dashboard\MenuOrderController::class, 'index'])->name('orders.index');
+        Route::patch('orders/{order}', [\App\Http\Controllers\Dashboard\MenuOrderController::class, 'update'])->name('orders.update');
         Route::delete('items/{item}/image', [ItemController::class, 'destroyImage'])->name('items.image.destroy');
         Route::resource('items', ItemController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('menu-pages/{menuPage}/theme', [ThemeController::class, 'edit'])->name('theme.edit');

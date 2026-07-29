@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $menuPage->meta_title ?: $menuPage->name.' | '.$restaurant->name }}</title>
     <meta name="description" content="{{ $menuPage->meta_description ?: $menuPage->description }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -54,6 +55,19 @@
 </header>
 
 <main class="container public-menu-container py-4" data-public-menu-content>
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @if($menuPages->count() > 1 || $mapEmbedUrl)
         <nav class="menu-page-links mb-4" aria-label="روابط صفحات المنيو والموقع">
             @foreach($menuPages as $page)
@@ -135,6 +149,18 @@
                                 @unless($item->is_available)
                                     <span class="badge text-bg-secondary">غير متوفر حاليًا</span>
                                 @endunless
+                                @if($restaurant->ordering_enabled && $restaurant->tables_count > 0 && $item->is_available)
+                                    <button
+                                        class="btn btn-primary w-100 mt-3"
+                                        type="button"
+                                        data-order-add
+                                        data-id="{{ $item->id }}"
+                                        data-name="{{ $item->name }}"
+                                        data-price="{{ $item->price }}"
+                                    >
+                                        <i class="bi bi-plus-circle"></i> أضف للطلب
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </article>
@@ -178,6 +204,68 @@
         </section>
     @endforeach
 </main>
+
+@if($restaurant->ordering_enabled && $restaurant->tables_count > 0)
+    <div class="public-order-bar" data-order-bar hidden>
+        <div>
+            <strong>طلبك</strong>
+            <span><span data-order-count>0</span> صنف - <span data-order-total>0.00</span> {{ $restaurant->currency }}</span>
+        </div>
+        <button class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#publicOrderModal">
+            إتمام الطلب
+        </button>
+    </div>
+
+    <div class="modal fade" id="publicOrderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <form method="post" action="{{ route('public.orders.store', $restaurant) }}" data-public-order-form>
+                    @csrf
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5">تأكيد الطلب</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="public-order-items mb-3" data-order-items></div>
+                        <div data-order-inputs></div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">الاسم *</label>
+                                <input class="form-control" name="customer_name" required value="{{ old('customer_name') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">الإيميل *</label>
+                                <input class="form-control" type="email" name="customer_email" required value="{{ old('customer_email') }}">
+                                <small class="text-muted">سيتم إرسال تأكيد الطلب على هذا الإيميل.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">الهاتف</label>
+                                <input class="form-control" name="customer_phone" value="{{ old('customer_phone') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">رقم الطاولة *</label>
+                                <select class="form-select" name="table_number" required>
+                                    <option value="">اختر الطاولة</option>
+                                    @for($table = 1; $table <= $restaurant->tables_count; $table++)
+                                        <option value="{{ $table }}" @selected((string) old('table_number') === (string) $table)>طاولة {{ $table }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">ملاحظات</label>
+                                <textarea class="form-control" name="notes" rows="3">{{ old('notes') }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <strong class="me-auto">الإجمالي: <span data-order-total>0.00</span> {{ $restaurant->currency }}</strong>
+                        <button class="btn btn-primary" data-order-submit disabled>إرسال الطلب</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endif
 
 <footer class="text-center py-4 text-muted">
     <div>منيو {{ $restaurant->name }} الإلكتروني</div>

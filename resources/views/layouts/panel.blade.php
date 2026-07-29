@@ -42,6 +42,7 @@
                     <a href="{{ route('dashboard.home') }}"><i class="bi bi-house"></i> الرئيسية</a>
                     <a href="{{ route('dashboard.restaurant-settings.edit') }}"><i class="bi bi-building-gear"></i> بيانات المطعم</a>
                     <a href="{{ route('dashboard.menu-pages.index') }}"><i class="bi bi-menu-button-wide"></i> صفحات المنيو</a>
+                    <a href="{{ route('dashboard.orders.index') }}"><i class="bi bi-receipt-cutoff"></i> طلبات العملاء</a>
                     <a href="{{ route('dashboard.categories.index') }}"><i class="bi bi-tags"></i> التصنيفات</a>
                     <a href="{{ route('dashboard.items.index') }}"><i class="bi bi-card-list"></i> الأصناف</a>
                     <a href="{{ route('public.restaurant', auth()->user()->restaurant) }}" target="_blank"><i class="bi bi-eye"></i> عرض المنيو</a>

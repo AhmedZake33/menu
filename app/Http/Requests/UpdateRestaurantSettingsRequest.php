@@ -34,6 +34,7 @@ class UpdateRestaurantSettingsRequest extends FormRequest
             'tiktok_url' => ['nullable', 'url', 'max:500'],
             'website_url' => ['nullable', 'url', 'max:500'],
             'currency' => ['required', 'string', 'max:8'],
+            'tables_count' => ['nullable', 'integer', 'min:0', 'max:500'],
         ];
     }
 }

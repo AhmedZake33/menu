@@ -253,6 +253,130 @@ const initPublicMapTabs = (root = document) => {
     });
 };
 
+const initPublicOrdering = (root = document) => {
+    const shell = root.querySelector?.('[data-public-menu-shell]:not([data-ordering-ready])')
+        ?? (root.matches?.('[data-public-menu-shell]:not([data-ordering-ready])') ? root : null);
+
+    if (!shell) {
+        return;
+    }
+
+    shell.dataset.orderingReady = '1';
+
+    const cart = new Map();
+    const bar = shell.querySelector('[data-order-bar]');
+    const itemsBox = shell.querySelector('[data-order-items]');
+    const inputsBox = shell.querySelector('[data-order-inputs]');
+    const submit = shell.querySelector('[data-order-submit]');
+    const currency = shell.querySelector('.public-order-bar span')?.textContent?.split(' ').pop() ?? '';
+
+    const money = value => Number(value || 0).toFixed(2);
+
+    const render = () => {
+        const items = [...cart.values()];
+        const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+        const total = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+
+        shell.querySelectorAll('[data-order-count]').forEach(element => {
+            element.textContent = totalQuantity;
+        });
+        shell.querySelectorAll('[data-order-total]').forEach(element => {
+            element.textContent = money(total);
+        });
+
+        if (bar) {
+            bar.hidden = items.length === 0;
+        }
+
+        if (submit) {
+            submit.disabled = items.length === 0;
+        }
+
+        if (itemsBox) {
+            itemsBox.innerHTML = items.length
+                ? items.map(item => `
+                    <div class="public-order-line">
+                        <div>
+                            <strong>${item.name}</strong>
+                            <small>${money(item.price)} ${currency}</small>
+                        </div>
+                        <div class="public-order-qty">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-order-dec="${item.id}">-</button>
+                            <span>${item.quantity}</span>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-order-inc="${item.id}">+</button>
+                            <button class="btn btn-sm btn-outline-danger" type="button" data-order-remove="${item.id}"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('')
+                : '<p class="text-muted mb-0">لم يتم اختيار أصناف بعد.</p>';
+        }
+
+        if (inputsBox) {
+            inputsBox.innerHTML = items.map((item, index) => `
+                <input type="hidden" name="items[${index}][id]" value="${item.id}">
+                <input type="hidden" name="items[${index}][quantity]" value="${item.quantity}">
+            `).join('');
+        }
+    };
+
+    shell.addEventListener('click', event => {
+        const addButton = event.target.closest('[data-order-add]');
+        const increment = event.target.closest('[data-order-inc]');
+        const decrement = event.target.closest('[data-order-dec]');
+        const remove = event.target.closest('[data-order-remove]');
+
+        if (addButton) {
+            const id = addButton.dataset.id;
+            const current = cart.get(id) ?? {
+                id,
+                name: addButton.dataset.name,
+                price: Number(addButton.dataset.price),
+                quantity: 0,
+            };
+
+            current.quantity += 1;
+            cart.set(id, current);
+            render();
+            return;
+        }
+
+        if (increment) {
+            const item = cart.get(increment.dataset.orderInc);
+            if (item) {
+                item.quantity += 1;
+                render();
+            }
+            return;
+        }
+
+        if (decrement) {
+            const item = cart.get(decrement.dataset.orderDec);
+            if (item) {
+                item.quantity -= 1;
+                if (item.quantity <= 0) {
+                    cart.delete(item.id);
+                }
+                render();
+            }
+            return;
+        }
+
+        if (remove) {
+            cart.delete(remove.dataset.orderRemove);
+            render();
+        }
+    });
+
+    shell.querySelector('[data-public-order-form]')?.addEventListener('submit', event => {
+        if (cart.size === 0) {
+            event.preventDefault();
+            render();
+        }
+    });
+
+    render();
+};
+
 const initDashboardWidgets = (root = document) => {
     initPanelSidebar(root);
     initSortables(root);
@@ -260,6 +384,7 @@ const initDashboardWidgets = (root = document) => {
     initPasswordToggles(root);
     initLocationPicker(root);
     initPublicMapTabs(root);
+    initPublicOrdering(root);
 };
 
 initDashboardWidgets();

@@ -16,6 +16,8 @@ class Restaurant extends Model
     {
         return [
             'is_active' => 'boolean',
+            'ordering_enabled' => 'boolean',
+            'tables_count' => 'integer',
             'expires_at' => 'datetime',
             'map_latitude' => 'decimal:7',
             'map_longitude' => 'decimal:7',
@@ -60,5 +62,10 @@ class Restaurant extends Model
     public function menuViews()
     {
         return $this->hasMany(MenuView::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(MenuOrder::class);
     }
 }

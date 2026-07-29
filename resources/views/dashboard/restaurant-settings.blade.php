@@ -93,6 +93,17 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label">عدد الطاولات</label>
+                    <input class="form-control" type="number" name="tables_count" min="0" max="500" value="{{ old('tables_count', $restaurant->tables_count) }}">
+                    <small class="text-muted">
+                        @if($restaurant->ordering_enabled)
+                            يستخدمها العملاء لاختيار رقم الطاولة عند إرسال الطلب.
+                        @else
+                            الطلبات غير مفعلة من الأدمن حاليًا.
+                        @endif
+                    </small>
+                </div>
             </div>
         </div>
     </div>
