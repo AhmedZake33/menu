@@ -97,6 +97,21 @@ const initLocationPicker = (root = document) => {
     setTimeout(() => map.invalidateSize(), 250);
 };
 
+const initPanelSidebar = (root = document) => {
+    root.querySelectorAll('#panelSidebar:not([data-sidebar-ready])').forEach(sidebar => {
+        sidebar.dataset.sidebarReady = '1';
+        sidebar.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth >= 992) {
+                    return;
+                }
+
+                bootstrap.Offcanvas.getInstance(sidebar)?.hide();
+            });
+        });
+    });
+};
+
 const initPanelAjax = () => {
     document.addEventListener('submit', async event => {
         const form = event.target;
@@ -239,6 +254,7 @@ const initPublicMapTabs = (root = document) => {
 };
 
 const initDashboardWidgets = (root = document) => {
+    initPanelSidebar(root);
     initSortables(root);
     initMenuSearch(root);
     initPasswordToggles(root);
