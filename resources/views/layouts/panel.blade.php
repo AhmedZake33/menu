@@ -36,15 +36,15 @@
             </div>
             <nav class="panel-sidebar-nav p-3">
                 @if($isSuperAdmin)
-                    <a href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> لوحة الإحصائيات</a>
-                    <a href="{{ route('admin.restaurants.index') }}"><i class="bi bi-shop"></i> المطاعم</a>
+                    <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> لوحة الإحصائيات</a>
+                    <a class="{{ request()->routeIs('admin.restaurants.*') ? 'active' : '' }}" href="{{ route('admin.restaurants.index') }}"><i class="bi bi-shop"></i> المطاعم</a>
                 @else
-                    <a href="{{ route('dashboard.home') }}"><i class="bi bi-house"></i> الرئيسية</a>
-                    <a href="{{ route('dashboard.restaurant-settings.edit') }}"><i class="bi bi-building-gear"></i> بيانات المطعم</a>
-                    <a href="{{ route('dashboard.menu-pages.index') }}"><i class="bi bi-menu-button-wide"></i> صفحات المنيو</a>
-                    <a href="{{ route('dashboard.orders.index') }}"><i class="bi bi-receipt-cutoff"></i> طلبات العملاء</a>
-                    <a href="{{ route('dashboard.categories.index') }}"><i class="bi bi-tags"></i> التصنيفات</a>
-                    <a href="{{ route('dashboard.items.index') }}"><i class="bi bi-card-list"></i> الأصناف</a>
+                    <a class="{{ request()->routeIs('dashboard.home') ? 'active' : '' }}" href="{{ route('dashboard.home') }}"><i class="bi bi-house"></i> الرئيسية</a>
+                    <a class="{{ request()->routeIs('dashboard.restaurant-settings.*') ? 'active' : '' }}" href="{{ route('dashboard.restaurant-settings.edit') }}"><i class="bi bi-building-gear"></i> بيانات المطعم</a>
+                    <a class="{{ request()->routeIs('dashboard.menu-pages.*', 'dashboard.theme.*', 'dashboard.qr') ? 'active' : '' }}" href="{{ route('dashboard.menu-pages.index') }}"><i class="bi bi-menu-button-wide"></i> صفحات المنيو</a>
+                    <a class="{{ request()->routeIs('dashboard.orders.*') ? 'active' : '' }}" href="{{ route('dashboard.orders.index') }}"><i class="bi bi-receipt-cutoff"></i> طلبات العملاء</a>
+                    <a class="{{ request()->routeIs('dashboard.categories.*') ? 'active' : '' }}" href="{{ route('dashboard.categories.index') }}"><i class="bi bi-tags"></i> التصنيفات</a>
+                    <a class="{{ request()->routeIs('dashboard.items.*') ? 'active' : '' }}" href="{{ route('dashboard.items.index') }}"><i class="bi bi-card-list"></i> الأصناف</a>
                     <a href="{{ route('public.restaurant', auth()->user()->restaurant) }}" target="_blank"><i class="bi bi-eye"></i> عرض المنيو</a>
                 @endif
             </nav>
