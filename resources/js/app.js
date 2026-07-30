@@ -268,9 +268,43 @@ const initPublicOrdering = (root = document) => {
     const itemsBox = shell.querySelector('[data-order-items]');
     const inputsBox = shell.querySelector('[data-order-inputs]');
     const submit = shell.querySelector('[data-order-submit]');
+    const form = shell.querySelector('[data-public-order-form]');
+    const statusBox = shell.querySelector('[data-order-status]');
+    const detailsStep = shell.querySelector('[data-order-details-step]');
+    const verificationStep = shell.querySelector('[data-order-verification-step]');
+    const tokenInput = shell.querySelector('[data-verification-token]');
     const currency = shell.querySelector('.public-order-bar span')?.textContent?.split(' ').pop() ?? '';
+    let verificationRequested = false;
 
     const money = value => Number(value || 0).toFixed(2);
+    const setStatus = (message, type = 'info') => {
+        if (!statusBox) {
+            return;
+        }
+
+        statusBox.className = `alert alert-${type}`;
+        statusBox.textContent = message;
+    };
+
+    const setSubmitting = isSubmitting => {
+        if (!submit) {
+            return;
+        }
+
+        submit.disabled = isSubmitting || cart.size === 0;
+        submit.innerHTML = isSubmitting
+            ? '<span class="spinner-border spinner-border-sm"></span>'
+            : (verificationRequested ? 'تأكيد الطلب' : 'إرسال كود التأكيد');
+    };
+    const resetVerification = () => {
+        verificationRequested = false;
+        if (tokenInput) {
+            tokenInput.value = '';
+        }
+        detailsStep?.classList.remove('d-none');
+        verificationStep?.classList.add('d-none');
+        statusBox?.classList.add('d-none');
+    };
 
     const render = () => {
         const items = [...cart.values()];
@@ -290,6 +324,7 @@ const initPublicOrdering = (root = document) => {
 
         if (submit) {
             submit.disabled = items.length === 0;
+            submit.textContent = verificationRequested ? 'تأكيد الطلب' : 'إرسال كود التأكيد';
         }
 
         if (itemsBox) {
@@ -336,6 +371,7 @@ const initPublicOrdering = (root = document) => {
 
             current.quantity += 1;
             cart.set(id, current);
+            resetVerification();
             render();
             return;
         }
@@ -344,6 +380,7 @@ const initPublicOrdering = (root = document) => {
             const item = cart.get(increment.dataset.orderInc);
             if (item) {
                 item.quantity += 1;
+                resetVerification();
                 render();
             }
             return;
@@ -356,6 +393,7 @@ const initPublicOrdering = (root = document) => {
                 if (item.quantity <= 0) {
                     cart.delete(item.id);
                 }
+                resetVerification();
                 render();
             }
             return;
@@ -363,14 +401,58 @@ const initPublicOrdering = (root = document) => {
 
         if (remove) {
             cart.delete(remove.dataset.orderRemove);
+            resetVerification();
             render();
         }
     });
 
-    shell.querySelector('[data-public-order-form]')?.addEventListener('submit', event => {
+    form?.addEventListener('submit', async event => {
         if (cart.size === 0) {
             event.preventDefault();
             render();
+            return;
+        }
+
+        event.preventDefault();
+        setSubmitting(true);
+
+        try {
+            const response = await fetch(verificationRequested ? form.dataset.confirmAction : form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: 'application/json',
+                },
+                credentials: 'same-origin',
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                const errors = data.errors ? Object.values(data.errors).flat() : [];
+                throw new Error(errors[0] ?? data.message ?? 'حدث خطأ، حاول مرة أخرى.');
+            }
+
+            if (!verificationRequested) {
+                verificationRequested = true;
+                tokenInput.value = data.token;
+                detailsStep?.classList.add('d-none');
+                verificationStep?.classList.remove('d-none');
+                verificationStep?.querySelector('input')?.focus();
+                setStatus(data.message ?? 'تم إرسال كود التأكيد إلى الإيميل.', 'success');
+                render();
+                return;
+            }
+
+            cart.clear();
+            render();
+            setStatus(data.message ?? 'تم تأكيد الطلب بنجاح.', 'success');
+            setTimeout(() => window.location.reload(), 1200);
+        } catch (error) {
+            setStatus(error.message, 'danger');
+        } finally {
+            setSubmitting(false);
         }
     });
 

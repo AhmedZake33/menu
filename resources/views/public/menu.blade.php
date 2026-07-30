@@ -219,16 +219,18 @@
     <div class="modal fade" id="publicOrderModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
-                <form method="post" action="{{ route('public.orders.store', $restaurant) }}" data-public-order-form>
+                <form method="post" action="{{ route('public.orders.code', $restaurant) }}" data-confirm-action="{{ route('public.orders.confirm', $restaurant) }}" data-public-order-form>
                     @csrf
                     <div class="modal-header">
                         <h2 class="modal-title fs-5">تأكيد الطلب</h2>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="alert alert-info d-none" data-order-status></div>
                         <div class="public-order-items mb-3" data-order-items></div>
                         <div data-order-inputs></div>
-                        <div class="row g-3">
+                        <input type="hidden" name="verification_token" data-verification-token>
+                        <div class="row g-3" data-order-details-step>
                             <div class="col-md-6">
                                 <label class="form-label">الاسم *</label>
                                 <input class="form-control" name="customer_name" required value="{{ old('customer_name') }}">
@@ -256,10 +258,15 @@
                                 <textarea class="form-control" name="notes" rows="3">{{ old('notes') }}</textarea>
                             </div>
                         </div>
+                        <div class="d-none" data-order-verification-step>
+                            <label class="form-label">كود التأكيد *</label>
+                            <input class="form-control text-center fs-4 fw-bold" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" name="verification_code" placeholder="000000" autocomplete="one-time-code">
+                            <small class="text-muted d-block mt-2">اكتب الكود المكون من 6 أرقام الذي تم إرساله إلى الإيميل.</small>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <strong class="me-auto">الإجمالي: <span data-order-total>0.00</span> {{ $restaurant->currency }}</strong>
-                        <button class="btn btn-primary" data-order-submit disabled>إرسال الطلب</button>
+                        <button class="btn btn-primary" data-order-submit disabled>إرسال كود التأكيد</button>
                     </div>
                 </form>
             </div>

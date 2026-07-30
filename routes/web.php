@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RestaurantController;
 use App\Http\Controllers\Dashboard\CategoryController;
 use App\Http\Controllers\Dashboard\ItemController;
+use App\Http\Controllers\Dashboard\MenuOrderController;
 use App\Http\Controllers\Dashboard\MenuPageController;
 use App\Http\Controllers\Dashboard\QrCodeController;
 use App\Http\Controllers\Dashboard\RestaurantSettingsController;
@@ -15,7 +16,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
 Route::get('/r/{restaurant}', [PublicMenuController::class, 'restaurant'])->name('public.restaurant');
-Route::post('/r/{restaurant}/orders', [PublicOrderController::class, 'store'])->name('public.orders.store');
+Route::post('/r/{restaurant}/orders/code', [PublicOrderController::class, 'sendCode'])->name('public.orders.code');
+Route::post('/r/{restaurant}/orders/confirm', [PublicOrderController::class, 'confirm'])->name('public.orders.confirm');
 Route::get('/r/{restaurant}/menu/{menuPage}', [PublicMenuController::class, 'menu'])->scopeBindings()->name('public.menu');
 Route::get('/menu/{restaurant}', [PublicMenuController::class, 'restaurant'])->name('public.short');
 
@@ -36,8 +38,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('restaurant-settings', [RestaurantSettingsController::class, 'update'])->name('restaurant-settings.update');
         Route::resource('menu-pages', MenuPageController::class)->except('show')->parameters(['menu-pages' => 'menuPage']);
         Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::get('orders', [\App\Http\Controllers\Dashboard\MenuOrderController::class, 'index'])->name('orders.index');
-        Route::patch('orders/{order}', [\App\Http\Controllers\Dashboard\MenuOrderController::class, 'update'])->name('orders.update');
+        Route::get('orders', [MenuOrderController::class, 'index'])->name('orders.index');
+        Route::patch('orders/{order}', [MenuOrderController::class, 'update'])->name('orders.update');
         Route::delete('items/{item}/image', [ItemController::class, 'destroyImage'])->name('items.image.destroy');
         Route::resource('items', ItemController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('menu-pages/{menuPage}/theme', [ThemeController::class, 'edit'])->name('theme.edit');

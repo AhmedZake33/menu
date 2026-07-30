@@ -1,6 +1,7 @@
 <?php
 
 use App\Mail\MenuOrderConfirmationMail;
+use App\Mail\MenuOrderVerificationCodeMail;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\MenuPage;
@@ -8,7 +9,7 @@ use App\Models\MenuTheme;
 use App\Models\Restaurant;
 use Illuminate\Support\Facades\Mail;
 
-it('allows customers to create an order when restaurant ordering is enabled', function () {
+it('requires email code verification before creating an order', function () {
     Mail::fake();
 
     $restaurant = Restaurant::create([
@@ -31,14 +32,28 @@ it('allows customers to create an order when restaurant ordering is enabled', fu
         'is_available' => true,
     ]);
 
-    $this->post(route('public.orders.store', $restaurant), [
+    $response = $this->postJson(route('public.orders.code', $restaurant), [
         'customer_name' => 'Ahmed',
         'customer_email' => 'ahmed@example.com',
         'table_number' => 3,
         'items' => [
             ['id' => $item->id, 'quantity' => 2],
         ],
-    ])->assertRedirect()->assertSessionHas('success');
+    ])->assertOk()->assertJsonStructure(['message', 'token']);
+
+    $this->assertDatabaseMissing('menu_orders', [
+        'restaurant_id' => $restaurant->id,
+        'customer_email' => 'ahmed@example.com',
+    ]);
+
+    Mail::assertSent(MenuOrderVerificationCodeMail::class);
+
+    $verificationMail = Mail::sent(MenuOrderVerificationCodeMail::class)->first();
+
+    $this->postJson(route('public.orders.confirm', $restaurant), [
+        'verification_token' => $response->json('token'),
+        'verification_code' => $verificationMail->code,
+    ])->assertOk()->assertJsonPath('order_id', 1);
 
     $this->assertDatabaseHas('menu_orders', [
         'restaurant_id' => $restaurant->id,
