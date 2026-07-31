@@ -6,8 +6,8 @@
     <title>@yield('title', 'Digital Menu SaaS')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body>
 @php($isSuperAdmin = auth()->user()->isSuperAdmin())
+<body @if(! $isSuperAdmin && auth()->user()->restaurant_id) data-restaurant-channel="{{ auth()->user()->restaurant_id }}" @endif>
 
 <nav class="navbar navbar-dark bg-dark sticky-top">
     <div class="container-fluid">
@@ -67,6 +67,14 @@
             @yield('content')
             <x-system-copyright class="panel-copyright" />
         </main>
+    </div>
+</div>
+<div class="order-live-toast" data-order-live-toast hidden>
+    <div class="order-live-toast-icon"><i class="bi bi-bell-fill"></i></div>
+    <div>
+        <strong>طلب جديد</strong>
+        <p data-order-live-message>تم استلام طلب جديد.</p>
+        <a href="{{ route('dashboard.orders.index') }}">عرض الطلبات</a>
     </div>
 </div>
 </body>

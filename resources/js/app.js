@@ -112,6 +112,63 @@ const initPanelSidebar = (root = document) => {
     });
 };
 
+const playOrderSound = () => {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const context = new AudioContext();
+        const gain = context.createGain();
+        gain.gain.value = 0.08;
+        gain.connect(context.destination);
+
+        [660, 880, 660].forEach((frequency, index) => {
+            const oscillator = context.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            oscillator.connect(gain);
+            oscillator.start(context.currentTime + index * 0.16);
+            oscillator.stop(context.currentTime + index * 0.16 + 0.12);
+        });
+    } catch (error) {
+        // Browsers may block sound until the user interacts with the page.
+    }
+};
+
+const initOrderLiveNotifications = () => {
+    const restaurantId = document.body.dataset.restaurantChannel;
+
+    if (!restaurantId || document.body.dataset.orderLiveReady === '1' || !window.Echo) {
+        return;
+    }
+
+    document.body.dataset.orderLiveReady = '1';
+
+    window.Echo.private(`restaurant.${restaurantId}`)
+        .listen('.menu-order.created', order => {
+            const toast = document.querySelector('[data-order-live-toast]');
+            const message = document.querySelector('[data-order-live-message]');
+
+            if (message) {
+                message.textContent = `طلب #${order.id} - طاولة ${order.table_number} - ${order.total} ${order.currency}`;
+            }
+
+            if (toast) {
+                toast.hidden = false;
+                toast.classList.remove('is-ringing');
+                void toast.offsetWidth;
+                toast.classList.add('is-ringing');
+                setTimeout(() => {
+                    toast.hidden = true;
+                }, 9000);
+            }
+
+            playOrderSound();
+
+            if (window.location.pathname === '/dashboard/orders') {
+                setTimeout(() => window.location.reload(), 700);
+            }
+        });
+};
+
 const initPanelAjax = () => {
     document.addEventListener('submit', async event => {
         const form = event.target;
@@ -470,6 +527,7 @@ const initDashboardWidgets = (root = document) => {
 };
 
 initDashboardWidgets();
+initOrderLiveNotifications();
 initPanelAjax();
 initPublicMenuAjax();
 Alpine.start();

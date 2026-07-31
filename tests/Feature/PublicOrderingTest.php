@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\MenuOrderCreated;
 use App\Mail\MenuOrderConfirmationMail;
 use App\Mail\MenuOrderVerificationCodeMail;
 use App\Models\Category;
@@ -7,6 +8,7 @@ use App\Models\Item;
 use App\Models\MenuPage;
 use App\Models\MenuTheme;
 use App\Models\Restaurant;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 
 it('requires email code verification before creating an order', function () {
@@ -49,6 +51,7 @@ it('requires email code verification before creating an order', function () {
     Mail::assertSent(MenuOrderVerificationCodeMail::class);
 
     $verificationMail = Mail::sent(MenuOrderVerificationCodeMail::class)->first();
+    Event::fake([MenuOrderCreated::class]);
 
     $this->postJson(route('public.orders.confirm', $restaurant), [
         'verification_token' => $response->json('token'),
@@ -63,4 +66,5 @@ it('requires email code verification before creating an order', function () {
     ]);
 
     Mail::assertSent(MenuOrderConfirmationMail::class);
+    Event::assertDispatched(MenuOrderCreated::class);
 });

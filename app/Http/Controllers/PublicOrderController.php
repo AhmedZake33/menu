@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MenuOrderCreated;
 use App\Mail\MenuOrderConfirmationMail;
 use App\Mail\MenuOrderVerificationCodeMail;
 use App\Models\Item;
@@ -95,6 +96,15 @@ class PublicOrderController extends Controller
 
         $order = $this->createOrder($restaurant, $data, $requested, $menuItems);
         $pending->delete();
+
+        try {
+            MenuOrderCreated::dispatch($order);
+        } catch (\Throwable $exception) {
+            Log::warning('Menu order realtime broadcast failed.', [
+                'order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
 
         try {
             Mail::to($order->customer_email)->send(new MenuOrderConfirmationMail($order));
