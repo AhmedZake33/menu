@@ -30,8 +30,10 @@ class QrCodeController extends Controller
 
         /** @var Restaurant $restaurant */
         $restaurant = request()->user()->restaurant;
+        abort_unless($url = $restaurant->googleReviewUrl(), 409, 'Google Place ID is not configured for this restaurant.');
+
         $format = $service->format($format);
-        $body = $service->render($restaurant->googleReviewUrl(), $format);
+        $body = $service->render($url, $format);
 
         return response($body)
             ->header('Content-Type', $format === 'png' ? 'image/png' : 'image/svg+xml')

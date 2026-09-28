@@ -516,12 +516,61 @@ const initPublicOrdering = (root = document) => {
     render();
 };
 
+const initGooglePlaceId = (root = document) => {
+    const source = root.querySelector('[data-google-place-source]');
+    const target = root.querySelector('[data-google-place-id]');
+
+    if (!source || !target) {
+        return;
+    }
+
+    const status = root.querySelector('[data-google-place-status]');
+    const patterns = [
+        /(?:placeid|place_id|ftid|cid)=([^&\s]+)/i,
+        /!1s([\w:-]+)/,
+        /\/maps\/place\/([\w:-]+)/,
+        /\/maps\/place\/([^/@?]+)/,
+    ];
+    const readyMarkup = '<span class="text-success"><i class="bi bi-check-circle"></i> جاهز — الكود بيفتح صفحة التقييم مباشرة.</span>';
+    const missingMarkup = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> محتاجين رابط المطعم على Google Maps الأول، من غيره مش هينفع نفتح صفحة التقييم (النجوم والتعليق).</span>';
+
+    const extract = value => {
+        for (const pattern of patterns) {
+            const match = value.match(pattern);
+
+            if (match) {
+                return decodeURIComponent(match[1]);
+            }
+        }
+
+        return '';
+    };
+
+    const sync = () => {
+        const placeId = extract(source.value.trim());
+        target.value = placeId;
+
+        if (status) {
+            status.innerHTML = placeId ? readyMarkup : missingMarkup;
+        }
+    };
+
+    source.dataset.placeIdReady = '1';
+    source.addEventListener('input', sync);
+    source.addEventListener('change', sync);
+
+    if (!target.value.trim()) {
+        sync();
+    }
+};
+
 const initDashboardWidgets = (root = document) => {
     initPanelSidebar(root);
     initSortables(root);
     initMenuSearch(root);
     initPasswordToggles(root);
     initLocationPicker(root);
+    initGooglePlaceId(root);
     initPublicMapTabs(root);
     initPublicOrdering(root);
 };

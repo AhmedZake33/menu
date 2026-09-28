@@ -52,27 +52,31 @@ class Restaurant extends Model
         $patterns = [
             '/(?:placeid|place_id|ftid|cid)=([^&\s]+)/i',
             '/!1s([\w:-]+)/',
-            '%/maps/place/([\w-]+)%',
+            '%/maps/place/([\w:-]+)%',
+            '%/maps/place/([^/@?]+)%',
         ];
 
         foreach ($patterns as $pattern) {
             if (preg_match($pattern, $this->map_url, $matches)) {
-                return $matches[1];
+                return rawurldecode($matches[1]);
             }
         }
 
         return null;
     }
 
-    public function googleReviewUrl(): string
+    public function hasGoogleReviewLink(): bool
     {
-        if ($placeId = $this->googlePlaceId()) {
-            return 'https://search.google.com/local/writereview?placeid='.rawurlencode($placeId);
+        return $this->googlePlaceId() !== null;
+    }
+
+    public function googleReviewUrl(): ?string
+    {
+        if (! $placeId = $this->googlePlaceId()) {
+            return null;
         }
 
-        $query = trim(implode(' ', array_filter([$this->name, $this->address])));
-
-        return 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($query);
+        return 'https://search.google.com/local/writereview?placeid='.rawurlencode($placeId);
     }
 
     public function users()

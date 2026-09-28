@@ -134,8 +134,9 @@
                                 <input id="map_longitude" class="form-control" name="map_longitude" dir="ltr" readonly value="{{ old('map_longitude', $restaurant->map_longitude) }}">
                             </div>
                         </div>
-                        <label class="form-label mt-3">رابط Google Maps اختياري</label>
-                        <input class="form-control" type="url" dir="ltr" name="map_url" value="{{ old('map_url', $restaurant->map_url) }}" placeholder="https://maps.google.com/...">
+                        <label class="form-label mt-3">رابط Google Maps</label>
+                        <input class="form-control" type="url" dir="ltr" name="map_url" data-google-place-source value="{{ old('map_url', $restaurant->map_url) }}" placeholder="https://maps.google.com/...">
+                        <small class="text-muted">الصق رابط المطعم من Google Maps (مشاركة ← نسخ الرابط) وهيتستخرج منه Place ID التقييم تلقائيًا.</small>
                         <button id="clear-location-picker" class="btn btn-outline-secondary w-100 mt-3" type="button">
                             <i class="bi bi-x-circle"></i> حذف التحديد
                         </button>
@@ -148,47 +149,59 @@
     <div class="card settings-card mb-4">
         <div class="card-body p-4">
             <h2 class="settings-section-title"><i class="bi bi-star"></i> QR التقييم على Google Maps</h2>
+            <p class="text-muted">
+                اطبع الكود ده أو حطه على الترابيز والفواتير. لما العميل يمسح الكود بيفتح صفحة تقييم المطعم على Google Maps على طول ويقدر يضيف نجومه وتعليقه.
+            </p>
             <div class="row g-4 align-items-center">
                 <div class="col-lg-8">
-                    <p class="text-muted">
-                        اطبع الكود ده أو حطه على الترابيز والفواتير. لما العميل يمسح الكود بيفتح صفحة تقييم المطعم على Google Maps على طول.
-                    </p>
-                    <div class="input-group mb-3" dir="ltr">
-                        <input class="form-control" readonly value="{{ $reviewUrl }}">
-                        <a class="btn btn-outline-secondary" target="_blank" href="{{ $reviewUrl }}" rel="noopener">
-                            <i class="bi bi-box-arrow-up-right"></i>
-                        </a>
-                    </div>
                     <label class="form-label fw-semibold">Google Place ID</label>
                     <input
                         class="form-control"
                         dir="ltr"
                         name="google_place_id"
+                        data-google-place-id
                         value="{{ old('google_place_id', $restaurant->google_place_id) }}"
                         placeholder="مثال: ChIJN1t_tDeuEmsRUsoyG83frY4"
                     >
                     <small class="text-muted">
-                        هتلاقي الـ Place ID في رابط المطعم على Google Maps: /maps/place/<b>Place_ID</b>/data=... — لو ما تستخدمتهوش، الكود هيستخدم بحث باسم المطعم.
+                        افتح المطعم على Google Maps، دوس <b>مشاركة</b> و<b>نسخ الرابط</b>، والصقه في خانة
+                        <b>رابط Google Maps</b> في قسم الخريطة بالأعلى — الـ Place ID هيتستخرج لوحده.
                     </small>
-                    @unless ($restaurant->googlePlaceId())
-                        <div class="alert alert-warning mt-3 mb-0 py-2">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            الكود الحالي بيستخدم بحث باسم المطعم. أضف الـ Place ID عشان يفتح صفحة التقييم مباشرة.
-                        </div>
-                    @endunless
+                    <div class="form-text" data-google-place-status>
+                        @if ($reviewUrl)
+                            <span class="text-success"><i class="bi bi-check-circle"></i> جاهز — الكود بيفتح صفحة التقييم مباشرة.</span>
+                        @else
+                            <span class="text-danger"><i class="bi bi-exclamation-circle"></i>
+                                محتاجين رابط المطعم على Google Maps الأول، من غيره مش هينفع نفتح صفحة التقييم (النجوم والتعليق).
+                            </span>
+                        @endif
+                    </div>
                 </div>
                 <div class="col-lg-4">
-                    <div class="qr-download-box">
-                        <img src="{{ route('dashboard.restaurant.google-review-qr', 'svg') }}" alt="QR تقييم {{ $restaurant->name }} على Google Maps">
-                        <div class="d-grid gap-2">
-                            <a class="btn btn-dark" target="_blank" href="{{ route('dashboard.restaurant.google-review-qr', 'svg') }}">
-                                <i class="bi bi-filetype-svg"></i> تحميل SVG
-                            </a>
-                            <a class="btn btn-outline-dark" target="_blank" href="{{ route('dashboard.restaurant.google-review-qr', 'png') }}">
-                                <i class="bi bi-filetype-png"></i> تحميل PNG
+                    @if ($reviewUrl)
+                        <div class="input-group mb-3" dir="ltr">
+                            <input class="form-control" readonly value="{{ $reviewUrl }}">
+                            <a class="btn btn-outline-secondary" target="_blank" href="{{ $reviewUrl }}" rel="noopener">
+                                <i class="bi bi-box-arrow-up-right"></i>
                             </a>
                         </div>
-                    </div>
+                        <div class="qr-download-box">
+                            <img src="{{ route('dashboard.restaurant.google-review-qr', 'svg') }}" alt="QR تقييم {{ $restaurant->name }} على Google Maps">
+                            <div class="d-grid gap-2">
+                                <a class="btn btn-dark" target="_blank" href="{{ route('dashboard.restaurant.google-review-qr', 'svg') }}">
+                                    <i class="bi bi-filetype-svg"></i> تحميل SVG
+                                </a>
+                                <a class="btn btn-outline-dark" target="_blank" href="{{ route('dashboard.restaurant.google-review-qr', 'png') }}">
+                                    <i class="bi bi-filetype-png"></i> تحميل PNG
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        <div class="location-picker-panel text-center py-4">
+                            <i class="bi bi-qr-code fs-1 text-muted"></i>
+                            <p class="text-muted mb-0 mt-2">كود التقييم هيظهر هنا أول ما تحفظ رابط المطعم على Google Maps.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
