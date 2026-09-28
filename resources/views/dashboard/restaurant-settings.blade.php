@@ -143,7 +143,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> 
 
     <div class="card settings-card mb-4">
         <div class="card-body p-4">
