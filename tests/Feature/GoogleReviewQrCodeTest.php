@@ -52,8 +52,44 @@ test('google place id is extracted from the map url when the column is empty', f
         'map_url' => 'https://www.google.com/maps/place/Omega/@30.04,31.23,17z/data=!4m6!3m5!1s0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b!8m2!3d30.04!4d31.23!16s%2Fg%2F11c5r5',
     ]);
 
-    expect($restaurant->googlePlaceId())->toBe('0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b')
-        ->and($restaurant->googleReviewUrl())->toStartWith('https://search.google.com/local/writereview?placeid=0x14f2c6b5a2a3b1e9');
+    expect($restaurant->googlePlaceId())->toBe('0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b');
+});
+
+test('a feature id is converted to a cid maps link instead of a writereview link', function () {
+    // writereview?placeid= requires a real Place ID (ChIJ...); a 0x..:0x.. feature id is not one.
+    $restaurant = Restaurant::factory()->create([
+        'google_place_id' => '0x14f7a512ea1236e1:0x9cf70ce32ab5cc62',
+    ]);
+
+    expect($restaurant->googleReviewUrl())
+        ->toBe('https://www.google.com/maps?cid=11310523158977956962')
+        ->and($restaurant->googleReviewUrl())->not->toContain('writereview');
+});
+
+test('feature id to cid conversion matches known google values', function () {
+    $service = app(GooglePlaceService::class);
+
+    // Documented pairing: Place ID ChIJ6-G_3DqAUocRw5ctKLeX2yI <-> CID 2511768030098069443
+    expect($service->cidFromFeatureId('0x8752803adcbfe1eb:0x22db97b7282d97c3'))->toBe('2511768030098069443')
+        ->and($service->cidFromFeatureId('ChIJ6-G_3DqAUocRw5ctKLeX2yI'))->toBeNull();
+});
+
+test('a real place id still uses the direct writereview link', function () {
+    $restaurant = Restaurant::factory()->create([
+        'google_place_id' => 'ChIJN1t_tDeuEmsRUsoyG83frY4',
+    ]);
+
+    expect($restaurant->googleReviewUrl())
+        ->toBe('https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4');
+});
+
+test('a place id is preferred over a feature id in the same link', function () {
+    $service = app(GooglePlaceService::class);
+
+    expect($service->extract('https://maps.app.goo.gl/abcd?place_id=ChIJN1t_tDeuEmsRUsoyG83frY4'))
+        ->toBe('ChIJN1t_tDeuEmsRUsoyG83frY4')
+        ->and($service->featureId('https://maps.app.goo.gl/abcd?place_id=ChIJN1t_tDeuEmsRUsoyG83frY4'))
+        ->toBeNull();
 });
 
 test('a bare google maps cid is not treated as a place id', function () {
@@ -108,7 +144,7 @@ test('saving a maps link resolves the place id even when the field was left empt
     ])->assertRedirect()->assertSessionHasNoErrors();
 
     expect($restaurant->fresh()->google_place_id)->toBe('0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b')
-        ->and($restaurant->fresh()->hasGoogleReviewLink())->toBeTrue();
+        ->and($restaurant->fresh()->googleReviewUrl())->toBe('https://www.google.com/maps?cid=11136131312779213355');
 });
 
 test('an unresolvable maps link is saved without breaking the request', function () {
@@ -150,14 +186,14 @@ test('google review qr code is refused when the place id is missing', function (
         ->assertStatus(409);
 });
 
-test('the maps link is enough to build a review link', function () {
+test('the maps link is enough to build a working review link', function () {
     $restaurant = Restaurant::factory()->create([
         'google_place_id' => null,
         'map_url' => 'https://www.google.com/maps/place/Omega+Cafe/data=!4m8!3m7!1s0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b!9m1!1b1!16s%2Fg%2F11c5r5',
     ]);
 
     expect($restaurant->hasGoogleReviewLink())->toBeTrue()
-        ->and($restaurant->googleReviewUrl())->toBe('https://search.google.com/local/writereview?placeid=0x14f2c6b5a2a3b1e9%3A0x9a8b7c6d5e4f3a2b');
+        ->and($restaurant->googleReviewUrl())->toBe('https://www.google.com/maps?cid=11136131312779213355');
 });
 
 test('place id can be decoded from a url encoded maps link', function () {

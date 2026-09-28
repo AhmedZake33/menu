@@ -51,16 +51,24 @@ class Restaurant extends Model
 
     public function hasGoogleReviewLink(): bool
     {
-        return $this->googlePlaceId() !== null;
+        return $this->googleReviewUrl() !== null;
     }
 
     public function googleReviewUrl(): ?string
     {
-        if (! $placeId = $this->googlePlaceId()) {
+        $places = app(GooglePlaceService::class);
+
+        if (! $identifier = $this->googlePlaceId()) {
             return null;
         }
 
-        return 'https://search.google.com/local/writereview?placeid='.rawurlencode($placeId);
+        if ($places->isFeatureId($identifier)) {
+            $cid = $places->cidFromFeatureId($identifier);
+
+            return $cid ? 'https://www.google.com/maps?cid='.$cid : null;
+        }
+
+        return 'https://search.google.com/local/writereview?placeid='.rawurlencode($identifier);
     }
 
     public function users()
