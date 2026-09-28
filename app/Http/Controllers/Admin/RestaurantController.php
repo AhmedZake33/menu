@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Restaurant;
 use App\Models\User;
+use App\Services\GooglePlaceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -44,6 +45,9 @@ class RestaurantController extends Controller
     public function update(Request $request, Restaurant $restaurant)
     {
         $data = $request->validate(['name' => 'required|max:150', 'slug' => 'required|alpha_dash|unique:restaurants,slug,'.$restaurant->id, 'email' => 'nullable|email', 'expires_at' => 'nullable|date', 'is_active' => 'nullable|boolean', 'ordering_enabled' => 'nullable|boolean', 'map_url' => 'nullable|url|max:2000', 'google_place_id' => 'nullable|string|max:255|regex:/^[A-Za-z0-9_:\-]+$/']);
+        $data['google_place_id'] = filled($data['google_place_id'] ?? null)
+            ? $data['google_place_id']
+            : app(GooglePlaceService::class)->resolve($data['map_url'] ?? $restaurant->map_url);
         $restaurant->update([...collect($data)->except('is_active', 'ordering_enabled')->all(), 'is_active' => $request->boolean('is_active'), 'ordering_enabled' => $request->boolean('ordering_enabled')]);
 
         return back()->with('success', 'تم حفظ التغييرات.');

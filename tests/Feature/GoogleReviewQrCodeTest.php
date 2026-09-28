@@ -3,7 +3,9 @@
 use App\Enums\UserRole;
 use App\Models\Restaurant;
 use App\Models\User;
+use App\Services\GooglePlaceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
@@ -52,6 +54,78 @@ test('google place id is extracted from the map url when the column is empty', f
 
     expect($restaurant->googlePlaceId())->toBe('0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b')
         ->and($restaurant->googleReviewUrl())->toStartWith('https://search.google.com/local/writereview?placeid=0x14f2c6b5a2a3b1e9');
+});
+
+test('a bare google maps cid is not treated as a place id', function () {
+    $restaurant = Restaurant::factory()->create([
+        'google_place_id' => null,
+        'map_url' => 'https://www.google.com/maps?cid=1234567890',
+    ]);
+
+    expect($restaurant->googlePlaceId())->toBeNull()
+        ->and($restaurant->hasGoogleReviewLink())->toBeFalse();
+});
+
+test('a short maps link without place data does not enable the review qr', function () {
+    $restaurant = Restaurant::factory()->create([
+        'google_place_id' => null,
+        'map_url' => 'https://maps.app.goo.gl/aBcDeFgHiJ',
+    ]);
+
+    expect(app(GooglePlaceService::class)->extract($restaurant->map_url))->toBeNull()
+        ->and($restaurant->googlePlaceId())->toBeNull()
+        ->and($restaurant->hasGoogleReviewLink())->toBeFalse();
+});
+
+test('the google place service ignores non google links', function () {
+    $service = app(GooglePlaceService::class);
+
+    expect($service->resolve('https://evil.example.com/maps/place/abc'))->toBeNull()
+        ->and($service->extract('https://evil.example.com/place_id=ChIJfake'))->toBeNull();
+});
+
+test('the google place service extracts a place id from a full maps link', function () {
+    $service = app(GooglePlaceService::class);
+
+    expect($service->resolve('https://www.google.com/maps/place/Omega/data=!4m6!3m5!1s0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b!8m2'))
+        ->toBe('0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b');
+});
+
+test('saving a maps link resolves the place id even when the field was left empty', function () {
+    Http::fake([
+        'maps.app.goo.gl/*' => Http::response('', 302, ['Location' => 'https://www.google.com/maps/place/Omega/data=!4m6!3m5!1s0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b!8m2']),
+        '*' => Http::response('', 404),
+    ]);
+
+    $restaurant = Restaurant::factory()->create(['google_place_id' => null, 'map_url' => null]);
+    $admin = reviewQrAdmin($restaurant);
+
+    $this->actingAs($admin)->put(route('dashboard.restaurant-settings.update'), [
+        'name' => $restaurant->name,
+        'slug' => $restaurant->slug,
+        'currency' => 'EGP',
+        'map_url' => 'https://maps.app.goo.gl/aBcDeFgHiJ',
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    expect($restaurant->fresh()->google_place_id)->toBe('0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b')
+        ->and($restaurant->fresh()->hasGoogleReviewLink())->toBeTrue();
+});
+
+test('an unresolvable maps link is saved without breaking the request', function () {
+    Http::fake(['*' => Http::response('', 404)]);
+
+    $restaurant = Restaurant::factory()->create(['google_place_id' => null, 'map_url' => null]);
+    $admin = reviewQrAdmin($restaurant);
+
+    $this->actingAs($admin)->put(route('dashboard.restaurant-settings.update'), [
+        'name' => $restaurant->name,
+        'slug' => $restaurant->slug,
+        'currency' => 'EGP',
+        'map_url' => 'https://maps.app.goo.gl/notARealLink',
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    expect($restaurant->fresh()->map_url)->toBe('https://maps.app.goo.gl/notARealLink')
+        ->and($restaurant->fresh()->google_place_id)->toBeNull();
 });
 
 test('google review url falls back to null when no place id exists', function () {

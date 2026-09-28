@@ -5,13 +5,15 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateRestaurantSettingsRequest;
 use App\Models\ActivityLog;
+use App\Models\Restaurant;
+use App\Services\GooglePlaceService;
 use App\Services\ImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class RestaurantSettingsController extends Controller
 {
-    public function __construct(private ImageService $images) {}
+    public function __construct(private ImageService $images, private GooglePlaceService $googlePlaces) {}
 
     public function edit(): View
     {
@@ -28,6 +30,7 @@ class RestaurantSettingsController extends Controller
         $restaurant = $request->user()->restaurant;
         $oldValues = $restaurant->toArray();
         $data = $request->safe()->except(['logo', 'cover_image']);
+        $data['google_place_id'] = $this->resolvePlaceId($data, $restaurant);
         $data['logo'] = $this->images->replace($request->file('logo'), $restaurant->logo, "restaurants/{$restaurant->id}/logo");
         $data['cover_image'] = $this->images->replace($request->file('cover_image'), $restaurant->cover_image, "restaurants/{$restaurant->id}/covers");
         $restaurant->update($data);
@@ -45,5 +48,16 @@ class RestaurantSettingsController extends Controller
         ]);
 
         return back()->with('success', 'تم حفظ بيانات المطعم بنجاح.');
+    }
+
+    private function resolvePlaceId(array $data, Restaurant $restaurant): ?string
+    {
+        if ($placeId = trim((string) ($data['google_place_id'] ?? null))) {
+            return $placeId;
+        }
+
+        $mapUrl = array_key_exists('map_url', $data) ? $data['map_url'] : $restaurant->map_url;
+
+        return $this->googlePlaces->resolve($mapUrl) ?? $this->googlePlaces->extract($mapUrl);
     }
 }

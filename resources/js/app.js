@@ -526,13 +526,15 @@ const initGooglePlaceId = (root = document) => {
 
     const status = root.querySelector('[data-google-place-status]');
     const patterns = [
-        /(?:placeid|place_id|ftid|cid)=([^&\s]+)/i,
+        /(?:placeid|place_id|ftid)=([^&\s]+)/i,
         /!1s([\w:-]+)/,
         /\/maps\/place\/([\w:-]+)/,
         /\/maps\/place\/([^/@?]+)/,
     ];
-    const readyMarkup = '<span class="text-success"><i class="bi bi-check-circle"></i> جاهز — الكود بيفتح صفحة التقييم مباشرة.</span>';
-    const missingMarkup = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> محتاجين رابط المطعم على Google Maps الأول، من غيره مش هينفع نفتح صفحة التقييم (النجوم والتعليق).</span>';
+    const shortLink = /^(https?:\/\/)?(maps\.app\.goo\.gl|goo\.gl)\//i;
+    const ready = '<span class="text-success"><i class="bi bi-check-circle"></i> جاهز — الكود بيفتح صفحة التقييم مباشرة.</span>';
+    const missing = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> محتاجين رابط المطعم على Google Maps الأول، من غيره مش هينفع نفتح صفحة التقييم (النجوم والتعليق).</span>';
+    const unresolvable = '<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> ده لينك مختصر مفيهوش بيانات المكان. افتح المطعم في المتصفح على الكمبيوتر، دوس <b>مشاركة ← نسخ الرابط</b>، والصق الرابط الطويل هنا.</span>';
 
     const extract = value => {
         for (const pattern of patterns) {
@@ -547,12 +549,26 @@ const initGooglePlaceId = (root = document) => {
     };
 
     const sync = () => {
-        const placeId = extract(source.value.trim());
-        target.value = placeId;
+        const value = source.value.trim();
 
-        if (status) {
-            status.innerHTML = placeId ? readyMarkup : missingMarkup;
+        if (!value) {
+            target.value = '';
+            status.innerHTML = missing;
+
+            return;
         }
+
+        const placeId = extract(value);
+
+        if (placeId) {
+            target.value = placeId;
+            status.innerHTML = ready;
+
+            return;
+        }
+
+        // Keep any Place ID already saved; it must not be wiped by a link we cannot parse.
+        status.innerHTML = shortLink.test(value) ? unresolvable : missing;
     };
 
     source.dataset.placeIdReady = '1';

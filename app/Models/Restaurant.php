@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\GooglePlaceService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -45,24 +46,7 @@ class Restaurant extends Model
             return $placeId;
         }
 
-        if (! $this->map_url) {
-            return null;
-        }
-
-        $patterns = [
-            '/(?:placeid|place_id|ftid|cid)=([^&\s]+)/i',
-            '/!1s([\w:-]+)/',
-            '%/maps/place/([\w:-]+)%',
-            '%/maps/place/([^/@?]+)%',
-        ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $this->map_url, $matches)) {
-                return rawurldecode($matches[1]);
-            }
-        }
-
-        return null;
+        return app(GooglePlaceService::class)->extract($this->map_url);
     }
 
     public function hasGoogleReviewLink(): bool
