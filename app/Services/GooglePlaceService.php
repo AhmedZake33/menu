@@ -61,7 +61,48 @@ class GooglePlaceService
 
         [, $second] = explode(':', $featureId, 2);
 
-        return $this->hexToDecimal(ltrim($second, '0x')) ?: null;
+        return $this->hexToDecimal($this->stripPrefix($second)) ?: null;
+    }
+
+    /**
+     * A Place ID (ChIJ...) and a feature id (0x..:0x..) are the same identifier in two
+     * encodings: the feature id pair packed into a fixed 20 byte protobuf, base64url encoded.
+     * Reverse engineered and undocumented, but it is what lets us build an official
+     * writereview link from a plain Maps URL without a Places API key.
+     */
+    public function placeIdFromFeatureId(?string $featureId): ?string
+    {
+        if (! $this->isFeatureId($featureId)) {
+            return null;
+        }
+
+        [$first, $second] = explode(':', $featureId, 2);
+
+        $bytes = array_merge(
+            [0x0A, 0x12, 0x09],
+            $this->hexToLittleEndianBytes($this->stripPrefix($first)),
+            [0x11],
+            $this->hexToLittleEndianBytes($this->stripPrefix($second)),
+        );
+
+        return rtrim(strtr(base64_encode(implode('', array_map('chr', $bytes))), '+/', '-_'), '=');
+    }
+
+    private function stripPrefix(string $hex): string
+    {
+        return preg_replace('/^0x/i', '', trim($hex)) ?: '';
+    }
+
+    private function hexToLittleEndianBytes(string $hex): array
+    {
+        $hex = str_pad(strtolower($hex), 16, '0', STR_PAD_LEFT);
+        $bytes = [];
+
+        for ($i = 14; $i >= 0; $i -= 2) {
+            $bytes[] = (int) hexdec(substr($hex, $i, 2));
+        }
+
+        return $bytes;
     }
 
     public function resolve(?string $url): ?string

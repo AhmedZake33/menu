@@ -55,16 +55,22 @@ test('google place id is extracted from the map url when the column is empty', f
     expect($restaurant->googlePlaceId())->toBe('0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b');
 });
 
-test('a feature id is converted to a cid maps link instead of a writereview link', function () {
-    // writereview?placeid= requires a real Place ID (ChIJ...); a 0x..:0x.. feature id is not one.
+test('a feature id is converted into a place id so the link opens the review form', function () {
     $restaurant = Restaurant::factory()->create([
         'google_place_id' => '0x14f7a512ea1236e1:0x9cf70ce32ab5cc62',
     ]);
 
     expect($restaurant->googleReviewUrl())
-        ->toBe('https://www.google.com/maps?cid=11310523158977956962')
-        ->and($restaurant->googleReviewUrl())->not->toContain('writereview');
+        ->toBe('https://search.google.com/local/writereview?placeid=ChIJ4TYS6hKl9xQRYsy1KuMM95w');
 });
+
+test('feature id converts to the published place id for known google places', function (string $featureId, string $placeId) {
+    expect(app(GooglePlaceService::class)->placeIdFromFeatureId($featureId))->toBe($placeId);
+})->with([
+    // Google Sydney office, published place id
+    ['0x6b12ae37b47f5b37:0x8eaddfcd1b32ca52', 'ChIJN1t_tDeuEmsRUsoyG83frY4'],
+    ['0x8752803adcbfe1eb:0x22db97b7282d97c3', 'ChIJ6-G_3DqAUocRw5ctKLeX2yI'],
+]);
 
 test('feature id to cid conversion matches known google values', function () {
     $service = app(GooglePlaceService::class);
@@ -72,6 +78,11 @@ test('feature id to cid conversion matches known google values', function () {
     // Documented pairing: Place ID ChIJ6-G_3DqAUocRw5ctKLeX2yI <-> CID 2511768030098069443
     expect($service->cidFromFeatureId('0x8752803adcbfe1eb:0x22db97b7282d97c3'))->toBe('2511768030098069443')
         ->and($service->cidFromFeatureId('ChIJ6-G_3DqAUocRw5ctKLeX2yI'))->toBeNull();
+});
+
+test('feature id conversion tolerates uppercase hex and an uppercase 0X prefix', function () {
+    expect(app(GooglePlaceService::class)->placeIdFromFeatureId('0X6B12AE37B47F5B37:0X8EADDFCD1B32CA52'))
+        ->toBe('ChIJN1t_tDeuEmsRUsoyG83frY4');
 });
 
 test('a real place id still uses the direct writereview link', function () {
@@ -144,7 +155,7 @@ test('saving a maps link resolves the place id even when the field was left empt
     ])->assertRedirect()->assertSessionHasNoErrors();
 
     expect($restaurant->fresh()->google_place_id)->toBe('0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b')
-        ->and($restaurant->fresh()->googleReviewUrl())->toBe('https://www.google.com/maps?cid=11136131312779213355');
+        ->and($restaurant->fresh()->googleReviewUrl())->toBe('https://search.google.com/local/writereview?placeid=ChIJ6bGjorXG8hQRKzpPXm18i5o');
 });
 
 test('an unresolvable maps link is saved without breaking the request', function () {
@@ -193,7 +204,7 @@ test('the maps link is enough to build a working review link', function () {
     ]);
 
     expect($restaurant->hasGoogleReviewLink())->toBeTrue()
-        ->and($restaurant->googleReviewUrl())->toBe('https://www.google.com/maps?cid=11136131312779213355');
+        ->and($restaurant->googleReviewUrl())->toBe('https://search.google.com/local/writereview?placeid=ChIJ6bGjorXG8hQRKzpPXm18i5o');
 });
 
 test('place id can be decoded from a url encoded maps link', function () {

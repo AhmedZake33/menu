@@ -63,6 +63,10 @@ class Restaurant extends Model
         }
 
         if ($places->isFeatureId($identifier)) {
+            $identifier = $places->placeIdFromFeatureId($identifier) ?? $identifier;
+        }
+
+        if ($places->isFeatureId($identifier)) {
             $cid = $places->cidFromFeatureId($identifier);
 
             return $cid ? 'https://www.google.com/maps?cid='.$cid : null;
