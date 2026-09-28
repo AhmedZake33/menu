@@ -45,6 +45,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('menu-pages/{menuPage}/theme', [ThemeController::class, 'edit'])->name('theme.edit');
         Route::put('menu-pages/{menuPage}/theme', [ThemeController::class, 'update'])->name('theme.update');
         Route::get('restaurant/qr/{format}', [QrCodeController::class, 'restaurant'])->name('restaurant.qr');
+        Route::get('restaurant/google-review-qr/{format}', [QrCodeController::class, 'review'])->name('restaurant.google-review-qr');
         Route::get('menu-pages/{menuPage}/qr/{format}', QrCodeController::class)->name('qr');
     });
 });

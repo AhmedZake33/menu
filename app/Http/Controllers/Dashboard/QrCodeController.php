@@ -24,6 +24,20 @@ class QrCodeController extends Controller
             ->header('Content-Disposition', 'inline; filename="'.$restaurant->slug.'-full-menu.'.$format.'"');
     }
 
+    public function review(string $format, QrCodeService $service)
+    {
+        abort_unless(in_array($format, ['png', 'svg']), 404);
+
+        /** @var Restaurant $restaurant */
+        $restaurant = request()->user()->restaurant;
+        $format = $service->format($format);
+        $body = $service->render($restaurant->googleReviewUrl(), $format);
+
+        return response($body)
+            ->header('Content-Type', $format === 'png' ? 'image/png' : 'image/svg+xml')
+            ->header('Content-Disposition', 'inline; filename="'.$restaurant->slug.'-google-review.'.$format.'"');
+    }
+
     public function __invoke(MenuPage $menuPage, string $format, QrCodeService $service)
     {
         $this->authorize('view', $menuPage);

@@ -39,6 +39,42 @@ class Restaurant extends Model
         return 'slug';
     }
 
+    public function googlePlaceId(): ?string
+    {
+        if ($placeId = trim((string) $this->google_place_id)) {
+            return $placeId;
+        }
+
+        if (! $this->map_url) {
+            return null;
+        }
+
+        $patterns = [
+            '/(?:placeid|place_id|ftid|cid)=([^&\s]+)/i',
+            '/!1s([\w:-]+)/',
+            '%/maps/place/([\w-]+)%',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $this->map_url, $matches)) {
+                return $matches[1];
+            }
+        }
+
+        return null;
+    }
+
+    public function googleReviewUrl(): string
+    {
+        if ($placeId = $this->googlePlaceId()) {
+            return 'https://search.google.com/local/writereview?placeid='.rawurlencode($placeId);
+        }
+
+        $query = trim(implode(' ', array_filter([$this->name, $this->address])));
+
+        return 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($query);
+    }
+
     public function users()
     {
         return $this->hasMany(User::class);

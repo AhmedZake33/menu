@@ -147,6 +147,55 @@
 
     <div class="card settings-card mb-4">
         <div class="card-body p-4">
+            <h2 class="settings-section-title"><i class="bi bi-star"></i> QR التقييم على Google Maps</h2>
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-8">
+                    <p class="text-muted">
+                        اطبع الكود ده أو حطه على الترابيز والفواتير. لما العميل يمسح الكود بيفتح صفحة تقييم المطعم على Google Maps على طول.
+                    </p>
+                    <div class="input-group mb-3" dir="ltr">
+                        <input class="form-control" readonly value="{{ $reviewUrl }}">
+                        <a class="btn btn-outline-secondary" target="_blank" href="{{ $reviewUrl }}" rel="noopener">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                    </div>
+                    <label class="form-label fw-semibold">Google Place ID</label>
+                    <input
+                        class="form-control"
+                        dir="ltr"
+                        name="google_place_id"
+                        value="{{ old('google_place_id', $restaurant->google_place_id) }}"
+                        placeholder="مثال: ChIJN1t_tDeuEmsRUsoyG83frY4"
+                    >
+                    <small class="text-muted">
+                        هتلاقي الـ Place ID في رابط المطعم على Google Maps: /maps/place/<b>Place_ID</b>/data=... — لو ما تستخدمتهوش، الكود هيستخدم بحث باسم المطعم.
+                    </small>
+                    @unless ($restaurant->googlePlaceId())
+                        <div class="alert alert-warning mt-3 mb-0 py-2">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            الكود الحالي بيستخدم بحث باسم المطعم. أضف الـ Place ID عشان يفتح صفحة التقييم مباشرة.
+                        </div>
+                    @endunless
+                </div>
+                <div class="col-lg-4">
+                    <div class="qr-download-box">
+                        <img src="{{ route('dashboard.restaurant.google-review-qr', 'svg') }}" alt="QR تقييم {{ $restaurant->name }} على Google Maps">
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-dark" target="_blank" href="{{ route('dashboard.restaurant.google-review-qr', 'svg') }}">
+                                <i class="bi bi-filetype-svg"></i> تحميل SVG
+                            </a>
+                            <a class="btn btn-outline-dark" target="_blank" href="{{ route('dashboard.restaurant.google-review-qr', 'png') }}">
+                                <i class="bi bi-filetype-png"></i> تحميل PNG
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card settings-card mb-4">
+        <div class="card-body p-4">
             <h2 class="settings-section-title"><i class="bi bi-share"></i> روابط التواصل</h2>
             <div class="row g-3">
                 @foreach(['website_url' => 'الموقع الإلكتروني', 'facebook_url' => 'Facebook', 'instagram_url' => 'Instagram', 'tiktok_url' => 'TikTok'] as $field => $label)

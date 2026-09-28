@@ -15,7 +15,12 @@ class RestaurantSettingsController extends Controller
 
     public function edit(): View
     {
-        return view('dashboard.restaurant-settings', ['restaurant' => request()->user()->restaurant]);
+        $restaurant = request()->user()->restaurant;
+
+        return view('dashboard.restaurant-settings', [
+            'restaurant' => $restaurant,
+            'reviewUrl' => $restaurant->googleReviewUrl(),
+        ]);
     }
 
     public function update(UpdateRestaurantSettingsRequest $request): RedirectResponse

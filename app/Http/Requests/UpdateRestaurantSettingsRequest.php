@@ -29,6 +29,7 @@ class UpdateRestaurantSettingsRequest extends FormRequest
             'map_url' => ['nullable', 'url', 'max:2000'],
             'map_latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'map_longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'google_place_id' => ['nullable', 'string', 'max:255', 'regex:/^[A-Za-z0-9_:\-]+$/'],
             'facebook_url' => ['nullable', 'url', 'max:500'],
             'instagram_url' => ['nullable', 'url', 'max:500'],
             'tiktok_url' => ['nullable', 'url', 'max:500'],
