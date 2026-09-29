@@ -18,11 +18,22 @@ class RestaurantSettingsController extends Controller
     public function edit(): View
     {
         $restaurant = request()->user()->restaurant;
+        $places = app(GooglePlaceService::class);
+
+        $coordinates = $restaurant->map_latitude && $restaurant->map_longitude
+            ? $restaurant->map_latitude.','.$restaurant->map_longitude
+            : null;
+
+        // Coordinates from the stored link win over the pin, so a pasted link shows its own location.
+        $linkCoordinates = $coordinates ? null : $places->coordinates($restaurant->map_url);
+        $query = $coordinates
+            ?: ($linkCoordinates ? $linkCoordinates['lat'].','.$linkCoordinates['lng'] : null)
+            ?: ($restaurant->map_url ?: trim($restaurant->address ?: $restaurant->name));
 
         return view('dashboard.restaurant-settings', [
             'restaurant' => $restaurant,
             'reviewUrl' => $restaurant->googleReviewUrl(),
-            'googleMapsKey' => (string) config('services.google_maps.key'),
+            'mapEmbedUrl' => $query ? 'https://www.google.com/maps?q='.rawurlencode($query).'&output=embed' : null,
         ]);
     }
 

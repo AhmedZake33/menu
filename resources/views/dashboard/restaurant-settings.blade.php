@@ -113,39 +113,42 @@
             <h2 class="settings-section-title"><i class="bi bi-geo-alt"></i> موقع المطعم على الخريطة</h2>
             <div class="row g-3">
                 <div class="col-lg-8">
-                    <div
-                        id="restaurant-location-picker"
-                        class="restaurant-location-picker"
-                        data-lat="{{ old('map_latitude', $restaurant->map_latitude) }}"
-                        data-lng="{{ old('map_longitude', $restaurant->map_longitude) }}"
-                        data-title="{{ $restaurant->name }}"
-                        data-google-maps-key="{{ $googleMapsKey }}"
-                    ></div>
-                    @unless ($googleMapsKey)
-                        <div class="alert alert-warning py-2 mt-2 mb-0 small">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            خريطة Google محتاجة مفتاح API. ضيف <code>GOOGLE_MAPS_API_KEY</code> في ملف <code>.env</code>،
-                            وتأكد إن <b>Maps JavaScript API</b> مفعّلة والفوترة شغالة على مشروع Google Cloud.
-                            لحد ما تضيف المفتاح، اكتب الإحداثيات يدوي في الخانات اللي جنبك.
-                        </div>
-                    @endunless
+                    <div class="restaurant-location-picker">
+                        @if ($mapEmbedUrl)
+                            <iframe
+                                data-map-preview
+                                title="موقع المطعم على Google Maps"
+                                src="{{ $mapEmbedUrl }}"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                allowfullscreen
+                            ></iframe>
+                        @else
+                            <div class="restaurant-location-picker-fallback">
+                                <i class="bi bi-geo-alt"></i>
+                                <span>الصق رابط المطعم من Google Maps، وهيتعرض الموقع هنا على طول.</span>
+                            </div>
+                        @endif
+                    </div>
                 </div>
                 <div class="col-lg-4">
                     <div class="location-picker-panel">
-                        <p class="text-muted">اضغط على الخريطة أو اسحب العلامة لتحديد مكان المطعم بدقة. الإحداثيات هتتخزن وتظهر للعميل في المنيو.</p>
-                        <div class="row g-2">
+                        <label class="form-label">رابط المطعم على Google Maps</label>
+                        <input class="form-control" type="url" dir="ltr" name="map_url" data-google-place-source data-map-link value="{{ old('map_url', $restaurant->map_url) }}" placeholder="https://www.google.com/maps/place/...">
+                        <small class="text-muted">
+                            افتح المطعم على Google Maps، دوس <b>مشاركة</b> و<b>نسخ الرابط</b>، والصقه هنا.
+                            هنستخرج الإحداثيات والـ Place ID (لوين التقييم) لوحدهم.
+                        </small>
+                        <div class="row g-2 mt-1">
                             <div class="col-6">
                                 <label class="form-label">Latitude</label>
-                                <input id="map_latitude" class="form-control" name="map_latitude" dir="ltr" step="any" @readonly($googleMapsKey) value="{{ old('map_latitude', $restaurant->map_latitude) }}">
+                                <input id="map_latitude" class="form-control" name="map_latitude" dir="ltr" step="any" value="{{ old('map_latitude', $restaurant->map_latitude) }}">
                             </div>
                             <div class="col-6">
                                 <label class="form-label">Longitude</label>
-                                <input id="map_longitude" class="form-control" name="map_longitude" dir="ltr" step="any" @readonly($googleMapsKey) value="{{ old('map_longitude', $restaurant->map_longitude) }}">
+                                <input id="map_longitude" class="form-control" name="map_longitude" dir="ltr" step="any" value="{{ old('map_longitude', $restaurant->map_longitude) }}">
                             </div>
                         </div>
-                        <label class="form-label mt-3">رابط Google Maps</label>
-                        <input class="form-control" type="url" dir="ltr" name="map_url" data-google-place-source value="{{ old('map_url', $restaurant->map_url) }}" placeholder="https://maps.google.com/...">
-                        <small class="text-muted">الصق رابط المطعم من Google Maps (مشاركة ← نسخ الرابط) وهيتستخرج منه Place ID التقييم تلقائيًا.</small>
                         <button id="clear-location-picker" class="btn btn-outline-secondary w-100 mt-3" type="button">
                             <i class="bi bi-x-circle"></i> حذف التحديد
                         </button>
@@ -153,7 +156,7 @@
                 </div>
             </div>
         </div>
-    </div> 
+    </div>
 
     <div class="card settings-card mb-4">
         <div class="card-body p-4">

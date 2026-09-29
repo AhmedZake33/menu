@@ -45,37 +45,43 @@ test('super admin cannot use restaurant self service settings route', function (
     $this->actingAs($admin)->get(route('dashboard.restaurant-settings.edit'))->assertForbidden();
 });
 
-test('location picker receives the configured google maps key', function () {
-    config()->set('services.google_maps.key', 'test-maps-key-123');
-    $restaurant = Restaurant::factory()->create();
+test('location picker shows the saved location on a keyless google maps embed', function () {
+    $restaurant = Restaurant::factory()->create(['map_latitude' => '30.0444200', 'map_longitude' => '31.2357100']);
     $admin = User::factory()->create(['role' => UserRole::RestaurantAdmin, 'restaurant_id' => $restaurant->id]);
 
     $this->actingAs($admin)->get(route('dashboard.restaurant-settings.edit'))
         ->assertOk()
-        ->assertSee('data-google-maps-key="test-maps-key-123"', false)
-        ->assertDontSee('خريطة Google محتاجة مفتاح API', false);
+        // no API key anywhere: the embed endpoint is keyless
+        ->assertSee('https://www.google.com/maps?q=30.0444200%2C31.2357100&amp;output=embed', false)
+        ->assertDontSee('GOOGLE_MAPS_API_KEY')
+        ->assertDontSee('maps.googleapis.com', false);
 });
 
-test('location picker degrades to manual coordinates when no google maps key is set', function () {
-    config()->set('services.google_maps.key', null);
-    $restaurant = Restaurant::factory()->create();
+test('location picker reads coordinates out of a pasted maps link', function () {
+    $restaurant = Restaurant::factory()->create([
+        'map_latitude' => null,
+        'map_longitude' => null,
+        'map_url' => 'https://www.google.com/maps/place/Omega/@30.0444,31.2357,17z/data=!4m6!3m5!1s0x14f2c6b5a2a3b1e9:0x9a8b7c6d5e4f3a2b!8m2!3d30.0511!4d31.2402',
+    ]);
     $admin = User::factory()->create(['role' => UserRole::RestaurantAdmin, 'restaurant_id' => $restaurant->id]);
 
-    $response = $this->actingAs($admin)->get(route('dashboard.restaurant-settings.edit'))->assertOk();
-
-    $response->assertSee('data-google-maps-key=""', false)
-        ->assertSee('GOOGLE_MAPS_API_KEY')
-        // coordinates must stay editable so the form is still usable without a map
-        ->assertSee('name="map_latitude" dir="ltr" step="any"', false)
-        ->assertSee('name="map_longitude" dir="ltr" step="any"', false);
+    // !3d/!4d wins over the @lat,lng view centre
+    $this->actingAs($admin)->get(route('dashboard.restaurant-settings.edit'))
+        ->assertOk()
+        ->assertSee('https://www.google.com/maps?q=30.0511%2C31.2402&amp;output=embed', false);
 });
 
-test('coordinates stay read only while the map is available', function () {
-    config()->set('services.google_maps.key', 'test-maps-key-123');
-    $restaurant = Restaurant::factory()->create();
+test('location picker falls back to the address when there is no link yet', function () {
+    $restaurant = Restaurant::factory()->create([
+        'name' => 'Cafe Rania',
+        'address' => 'Downtown Cairo',
+        'map_latitude' => null,
+        'map_longitude' => null,
+        'map_url' => null,
+    ]);
     $admin = User::factory()->create(['role' => UserRole::RestaurantAdmin, 'restaurant_id' => $restaurant->id]);
 
     $this->actingAs($admin)->get(route('dashboard.restaurant-settings.edit'))
         ->assertOk()
-        ->assertSee('name="map_latitude" dir="ltr" step="any" readonly', false);
+        ->assertSee('https://www.google.com/maps?q=Downtown%20Cairo&amp;output=embed', false);
 });

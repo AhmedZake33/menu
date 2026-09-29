@@ -36,135 +36,100 @@ const initPasswordToggles = (root = document) => {
     });
 };
 
-let googleMapsLoader = null;
+const embedUrl = query => `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
 
-const loadGoogleMaps = key => {
-    if (window.google?.maps) {
-        return Promise.resolve(window.google.maps);
-    }
+const coordinatePatterns = [
+    /!3d(-?[\d.]+)!4d(-?[\d.]+)/,
+    /@(-?[\d.]+),(-?[\d.]+)/,
+    /[?&](?:q|query|ll)=(-?[\d.]+),(-?[\d.]+)/,
+    /[?&]center=(-?[\d.]+),(-?[\d.]+)/,
+];
 
-    if (googleMapsLoader) {
-        return googleMapsLoader;
-    }
+const extractCoordinates = value => {
+    for (const pattern of coordinatePatterns) {
+        const match = value.match(pattern);
 
-    googleMapsLoader = new Promise((resolve, reject) => {
-        if (!key) {
-            reject(new Error('GOOGLE_MAPS_API_KEY is not configured'));
-
-            return;
+        if (!match) {
+            continue;
         }
 
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry`;
-        script.async = true;
-        script.defer = true;
-        script.addEventListener('load', () => {
-            if (window.google?.maps) {
-                resolve(window.google.maps);
-            } else {
-                reject(new Error('Google Maps loaded without the maps API.'));
-            }
-        });
-        script.addEventListener('error', () => reject(new Error('Google Maps failed to load.')));
-        document.head.appendChild(script);
-    });
+        const lat = parseFloat(match[1]);
+        const lng = parseFloat(match[2]);
 
-    return googleMapsLoader;
+        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            return { lat, lng };
+        }
+    }
+
+    return null;
 };
 
-const showMapFallback = (container, message) => {
-    if (container.querySelector('.restaurant-location-picker-fallback')) {
+const initMapPreview = (root = document) => {
+    const container = root.querySelector('[data-map-preview-container]') || root.querySelector('.restaurant-location-picker');
+
+    if (!container) {
         return;
     }
 
-    const notice = document.createElement('div');
-    notice.className = 'restaurant-location-picker-fallback';
-    notice.innerHTML = `<i class="bi bi-geo-alt"></i><span>${message}</span>`;
-    container.appendChild(notice);
-};
-
-const initLocationPicker = (root = document) => {
-    const locationPicker = root.querySelector('#restaurant-location-picker:not([data-map-ready])');
-
-    if (!locationPicker) {
-        return;
-    }
-
-    locationPicker.dataset.mapReady = '1';
-
+    const linkInput = root.querySelector('[data-map-link]');
     const latitudeInput = root.querySelector('#map_latitude');
     const longitudeInput = root.querySelector('#map_longitude');
     const clearButton = root.querySelector('#clear-location-picker');
-    const fallbackPosition = { lat: 30.0444, lng: 31.2357 };
-    const storedLat = parseFloat(locationPicker.dataset.lat);
-    const storedLng = parseFloat(locationPicker.dataset.lng);
-    const hasStoredPosition = !Number.isNaN(storedLat) && !Number.isNaN(storedLng);
-    const initialPosition = hasStoredPosition ? { lat: storedLat, lng: storedLng } : fallbackPosition;
+    const initial = latitudeInput && longitudeInput && latitudeInput.value && longitudeInput.value
+        ? `${parseFloat(latitudeInput.value)},${parseFloat(longitudeInput.value)}`
+        : null;
 
-    let map = null;
-    let marker = null;
-    let cleared = false;
-
-    const updateFields = latLng => {
-        latitudeInput.value = latLng.lat().toFixed(7);
-        longitudeInput.value = latLng.lng().toFixed(7);
+    const render = query => {
+        container.innerHTML = query
+            ? `<iframe data-map-preview title="موقع المطعم على Google Maps" src="${embedUrl(query)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>`
+            : '<div class="restaurant-location-picker-fallback"><i class="bi bi-geo-alt"></i><span>الصق رابط المطعم من Google Maps، وهيتعرض الموقع هنا على طول.</span></div>';
     };
 
-    const setMarker = latLng => {
-        if (!marker) {
-            marker = new window.google.maps.Marker({
-                map,
-                position: latLng,
-                draggable: true,
-                title: locationPicker.dataset.title || '',
-            });
-            marker.addListener('dragend', () => updateFields(marker.getPosition()));
-        } else {
-            marker.setPosition(latLng);
+    const syncFromLink = () => {
+        const value = linkInput.value.trim();
+
+        if (!value) {
+            return;
         }
 
-        updateFields(latLng);
-    };
+        const coordinates = extractCoordinates(value);
 
-    const clearSelection = () => {
-        cleared = true;
-        latitudeInput.value = '';
-        longitudeInput.value = '';
-
-        if (marker) {
-            marker.setMap(null);
-            marker = null;
+        if (coordinates) {
+            latitudeInput.value = coordinates.lat.toFixed(7);
+            longitudeInput.value = coordinates.lng.toFixed(7);
         }
+
+        render(coordinates ? `${coordinates.lat},${coordinates.lng}` : value);
     };
 
-    clearButton?.addEventListener('click', clearSelection);
+    const syncFromCoordinates = () => {
+        const lat = parseFloat(latitudeInput.value);
+        const lng = parseFloat(longitudeInput.value);
 
-    loadGoogleMaps(locationPicker.dataset.googleMapsKey)
-        .then(maps => {
-            map = new maps.Map(locationPicker, {
-                center: initialPosition,
-                zoom: hasStoredPosition ? 16 : 12,
-                mapTypeControl: false,
-                streetViewControl: false,
-                fullscreenControl: false,
-                clickableIcons: false,
-                gestureHandling: 'greedy',
-            });
+        if (Number.isNaN(lat) || Number.isNaN(lng)) {
+            return;
+        }
 
-            map.addListener('click', event => {
-                cleared = false;
-                setMarker(event.latLng);
-            });
+        render(`${lat},${lng}`);
+    };
 
-            if (hasStoredPosition && !cleared) {
-                setMarker(initialPosition);
-            }
-        })
-        .catch(error => {
-            showMapFallback(locationPicker, error.message === 'GOOGLE_MAPS_API_KEY is not configured'
-                ? 'خريطة Google محتاجة مفتاح API. اكتب الإحداثيات يدوي في الخانات اللي جنبك.'
-                : 'مش قادرين نحمّل خريطة Google. اكتب الإحداثيات يدوي في الخانات اللي جنبك.');
-        });
+    if (linkInput) {
+        linkInput.addEventListener('input', syncFromLink);
+        linkInput.addEventListener('change', syncFromLink);
+    }
+
+    latitudeInput?.addEventListener('change', syncFromCoordinates);
+    longitudeInput?.addEventListener('change', syncFromCoordinates);
+
+    clearButton?.addEventListener('click', () => {
+        if (latitudeInput) latitudeInput.value = '';
+        if (longitudeInput) longitudeInput.value = '';
+        render(null);
+    });
+
+    if (initial) {
+        render(initial);
+    }
 };
 
 const initPanelSidebar = (root = document) => {
@@ -655,7 +620,7 @@ const initDashboardWidgets = (root = document) => {
     initSortables(root);
     initMenuSearch(root);
     initPasswordToggles(root);
-    initLocationPicker(root);
+    initMapPreview(root);
     initGooglePlaceId(root);
     initPublicMapTabs(root);
     initPublicOrdering(root);

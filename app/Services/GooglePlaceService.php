@@ -118,6 +118,41 @@ class GooglePlaceService
         return $this->followRedirect($url);
     }
 
+    /**
+     * Latitude/longitude carried inside a shared Maps link, so the location can be
+     * shown on a keyless embed without the Maps JavaScript API.
+     *
+     * @return array{lat: float, lng: float}|null
+     */
+    public function coordinates(?string $url): ?array
+    {
+        if (! $url) {
+            return null;
+        }
+
+        $patterns = [
+            '/!3d(-?[\d.]+)!4d(-?[\d.]+)/',
+            '/@(-?[\d.]+),(-?[\d.]+)/',
+            '/[?&](?:q|query|ll)=(-?[\d.]+),(-?[\d.]+)/',
+            '/[?&]center=(-?[\d.]+),(-?[\d.]+)/',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (! preg_match($pattern, $url, $matches)) {
+                continue;
+            }
+
+            $lat = (float) $matches[1];
+            $lng = (float) $matches[2];
+
+            if ($lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180) {
+                return ['lat' => round($lat, 7), 'lng' => round($lng, 7)];
+            }
+        }
+
+        return null;
+    }
+
     private function isGoogleHost(string $url): bool
     {
         $host = parse_url($url, PHP_URL_HOST);
