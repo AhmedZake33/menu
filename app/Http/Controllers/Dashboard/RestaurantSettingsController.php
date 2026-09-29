@@ -22,6 +22,7 @@ class RestaurantSettingsController extends Controller
         return view('dashboard.restaurant-settings', [
             'restaurant' => $restaurant,
             'reviewUrl' => $restaurant->googleReviewUrl(),
+            'googleMapsKey' => (string) config('services.google_maps.key'),
         ]);
     }
 

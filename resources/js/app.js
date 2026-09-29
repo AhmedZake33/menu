@@ -1,6 +1,5 @@
 import './bootstrap';
 import * as bootstrap from 'bootstrap';
-import L from 'leaflet';
 import Sortable from 'sortablejs';
 import Alpine from 'alpinejs';
 
@@ -37,6 +36,53 @@ const initPasswordToggles = (root = document) => {
     });
 };
 
+let googleMapsLoader = null;
+
+const loadGoogleMaps = key => {
+    if (window.google?.maps) {
+        return Promise.resolve(window.google.maps);
+    }
+
+    if (googleMapsLoader) {
+        return googleMapsLoader;
+    }
+
+    googleMapsLoader = new Promise((resolve, reject) => {
+        if (!key) {
+            reject(new Error('GOOGLE_MAPS_API_KEY is not configured'));
+
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry`;
+        script.async = true;
+        script.defer = true;
+        script.addEventListener('load', () => {
+            if (window.google?.maps) {
+                resolve(window.google.maps);
+            } else {
+                reject(new Error('Google Maps loaded without the maps API.'));
+            }
+        });
+        script.addEventListener('error', () => reject(new Error('Google Maps failed to load.')));
+        document.head.appendChild(script);
+    });
+
+    return googleMapsLoader;
+};
+
+const showMapFallback = (container, message) => {
+    if (container.querySelector('.restaurant-location-picker-fallback')) {
+        return;
+    }
+
+    const notice = document.createElement('div');
+    notice.className = 'restaurant-location-picker-fallback';
+    notice.innerHTML = `<i class="bi bi-geo-alt"></i><span>${message}</span>`;
+    container.appendChild(notice);
+};
+
 const initLocationPicker = (root = document) => {
     const locationPicker = root.querySelector('#restaurant-location-picker:not([data-map-ready])');
 
@@ -49,52 +95,76 @@ const initLocationPicker = (root = document) => {
     const latitudeInput = root.querySelector('#map_latitude');
     const longitudeInput = root.querySelector('#map_longitude');
     const clearButton = root.querySelector('#clear-location-picker');
-    const fallbackPosition = [30.0444, 31.2357];
+    const fallbackPosition = { lat: 30.0444, lng: 31.2357 };
     const storedLat = parseFloat(locationPicker.dataset.lat);
     const storedLng = parseFloat(locationPicker.dataset.lng);
     const hasStoredPosition = !Number.isNaN(storedLat) && !Number.isNaN(storedLng);
-    const initialPosition = hasStoredPosition ? [storedLat, storedLng] : fallbackPosition;
-    const map = L.map(locationPicker).setView(initialPosition, hasStoredPosition ? 16 : 12);
+    const initialPosition = hasStoredPosition ? { lat: storedLat, lng: storedLng } : fallbackPosition;
+
+    let map = null;
     let marker = null;
+    let cleared = false;
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19,
-    }).addTo(map);
-
-    const updateFields = latlng => {
-        latitudeInput.value = latlng.lat.toFixed(7);
-        longitudeInput.value = latlng.lng.toFixed(7);
+    const updateFields = latLng => {
+        latitudeInput.value = latLng.lat().toFixed(7);
+        longitudeInput.value = latLng.lng().toFixed(7);
     };
 
-    const setMarker = latlng => {
+    const setMarker = latLng => {
         if (!marker) {
-            marker = L.marker(latlng, { draggable: true }).addTo(map);
-            marker.on('dragend', event => updateFields(event.target.getLatLng()));
+            marker = new window.google.maps.Marker({
+                map,
+                position: latLng,
+                draggable: true,
+                title: locationPicker.dataset.title || '',
+            });
+            marker.addListener('dragend', () => updateFields(marker.getPosition()));
         } else {
-            marker.setLatLng(latlng);
+            marker.setPosition(latLng);
         }
 
-        updateFields(latlng);
+        updateFields(latLng);
     };
 
-    if (hasStoredPosition) {
-        setMarker(L.latLng(storedLat, storedLng));
-    }
-
-    map.on('click', event => setMarker(event.latlng));
-
-    clearButton?.addEventListener('click', () => {
+    const clearSelection = () => {
+        cleared = true;
         latitudeInput.value = '';
         longitudeInput.value = '';
 
         if (marker) {
-            marker.remove();
+            marker.setMap(null);
             marker = null;
         }
-    });
+    };
 
-    setTimeout(() => map.invalidateSize(), 250);
+    clearButton?.addEventListener('click', clearSelection);
+
+    loadGoogleMaps(locationPicker.dataset.googleMapsKey)
+        .then(maps => {
+            map = new maps.Map(locationPicker, {
+                center: initialPosition,
+                zoom: hasStoredPosition ? 16 : 12,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                clickableIcons: false,
+                gestureHandling: 'greedy',
+            });
+
+            map.addListener('click', event => {
+                cleared = false;
+                setMarker(event.latLng);
+            });
+
+            if (hasStoredPosition && !cleared) {
+                setMarker(initialPosition);
+            }
+        })
+        .catch(error => {
+            showMapFallback(locationPicker, error.message === 'GOOGLE_MAPS_API_KEY is not configured'
+                ? 'خريطة Google محتاجة مفتاح API. اكتب الإحداثيات يدوي في الخانات اللي جنبك.'
+                : 'مش قادرين نحمّل خريطة Google. اكتب الإحداثيات يدوي في الخانات اللي جنبك.');
+        });
 };
 
 const initPanelSidebar = (root = document) => {

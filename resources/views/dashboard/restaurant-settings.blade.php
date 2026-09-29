@@ -118,8 +118,17 @@
                         class="restaurant-location-picker"
                         data-lat="{{ old('map_latitude', $restaurant->map_latitude) }}"
                         data-lng="{{ old('map_longitude', $restaurant->map_longitude) }}"
-                        data-address="{{ old('address', $restaurant->address) }}"
+                        data-title="{{ $restaurant->name }}"
+                        data-google-maps-key="{{ $googleMapsKey }}"
                     ></div>
+                    @unless ($googleMapsKey)
+                        <div class="alert alert-warning py-2 mt-2 mb-0 small">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            خريطة Google محتاجة مفتاح API. ضيف <code>GOOGLE_MAPS_API_KEY</code> في ملف <code>.env</code>،
+                            وتأكد إن <b>Maps JavaScript API</b> مفعّلة والفوترة شغالة على مشروع Google Cloud.
+                            لحد ما تضيف المفتاح، اكتب الإحداثيات يدوي في الخانات اللي جنبك.
+                        </div>
+                    @endunless
                 </div>
                 <div class="col-lg-4">
                     <div class="location-picker-panel">
@@ -127,11 +136,11 @@
                         <div class="row g-2">
                             <div class="col-6">
                                 <label class="form-label">Latitude</label>
-                                <input id="map_latitude" class="form-control" name="map_latitude" dir="ltr" readonly value="{{ old('map_latitude', $restaurant->map_latitude) }}">
+                                <input id="map_latitude" class="form-control" name="map_latitude" dir="ltr" step="any" @readonly($googleMapsKey) value="{{ old('map_latitude', $restaurant->map_latitude) }}">
                             </div>
                             <div class="col-6">
                                 <label class="form-label">Longitude</label>
-                                <input id="map_longitude" class="form-control" name="map_longitude" dir="ltr" readonly value="{{ old('map_longitude', $restaurant->map_longitude) }}">
+                                <input id="map_longitude" class="form-control" name="map_longitude" dir="ltr" step="any" @readonly($googleMapsKey) value="{{ old('map_longitude', $restaurant->map_longitude) }}">
                             </div>
                         </div>
                         <label class="form-label mt-3">رابط Google Maps</label>

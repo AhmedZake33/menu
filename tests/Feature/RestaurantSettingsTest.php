@@ -44,3 +44,38 @@ test('super admin cannot use restaurant self service settings route', function (
     $admin = User::factory()->create(['role' => UserRole::SuperAdmin, 'restaurant_id' => null]);
     $this->actingAs($admin)->get(route('dashboard.restaurant-settings.edit'))->assertForbidden();
 });
+
+test('location picker receives the configured google maps key', function () {
+    config()->set('services.google_maps.key', 'test-maps-key-123');
+    $restaurant = Restaurant::factory()->create();
+    $admin = User::factory()->create(['role' => UserRole::RestaurantAdmin, 'restaurant_id' => $restaurant->id]);
+
+    $this->actingAs($admin)->get(route('dashboard.restaurant-settings.edit'))
+        ->assertOk()
+        ->assertSee('data-google-maps-key="test-maps-key-123"', false)
+        ->assertDontSee('خريطة Google محتاجة مفتاح API', false);
+});
+
+test('location picker degrades to manual coordinates when no google maps key is set', function () {
+    config()->set('services.google_maps.key', null);
+    $restaurant = Restaurant::factory()->create();
+    $admin = User::factory()->create(['role' => UserRole::RestaurantAdmin, 'restaurant_id' => $restaurant->id]);
+
+    $response = $this->actingAs($admin)->get(route('dashboard.restaurant-settings.edit'))->assertOk();
+
+    $response->assertSee('data-google-maps-key=""', false)
+        ->assertSee('GOOGLE_MAPS_API_KEY')
+        // coordinates must stay editable so the form is still usable without a map
+        ->assertSee('name="map_latitude" dir="ltr" step="any"', false)
+        ->assertSee('name="map_longitude" dir="ltr" step="any"', false);
+});
+
+test('coordinates stay read only while the map is available', function () {
+    config()->set('services.google_maps.key', 'test-maps-key-123');
+    $restaurant = Restaurant::factory()->create();
+    $admin = User::factory()->create(['role' => UserRole::RestaurantAdmin, 'restaurant_id' => $restaurant->id]);
+
+    $this->actingAs($admin)->get(route('dashboard.restaurant-settings.edit'))
+        ->assertOk()
+        ->assertSee('name="map_latitude" dir="ltr" step="any" readonly', false);
+});
