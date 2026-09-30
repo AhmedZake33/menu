@@ -111,79 +111,34 @@
     <div class="card settings-card mb-4">
         <div class="card-body p-4">
             <h2 class="settings-section-title"><i class="bi bi-geo-alt"></i> موقع المطعم على الخريطة</h2>
-            <div class="row g-3">
-                <div class="col-lg-8">
-                    <div class="restaurant-location-picker">
-                        @if ($mapEmbedUrl)
-                            <iframe
-                                data-map-preview
-                                title="موقع المطعم على Google Maps"
-                                src="{{ $mapEmbedUrl }}"
-                                loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade"
-                                allowfullscreen
-                            ></iframe>
-                        @else
-                            <div class="restaurant-location-picker-fallback">
-                                <i class="bi bi-geo-alt"></i>
-                                <span>الصق رابط المطعم من Google Maps، وهيتعرض الموقع هنا على طول.</span>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="location-picker-panel">
-                        <label class="form-label">دوّر على المطعم</label>
-                        <div
-                            data-place-search
-                            data-place-search-url="{{ route('dashboard.restaurant-settings.place-search') }}"
-                            data-place-id-url="{{ route('dashboard.restaurant-settings.place-id') }}"
-                        >
-                            <div class="input-group">
-                                <input
-                                    class="form-control"
-                                    data-place-search-input
-                                    type="search"
-                                    autocomplete="off"
-                                    role="combobox"
-                                    aria-expanded="false"
-                                    aria-autocomplete="list"
-                                    aria-controls="place-search-results"
-                                    placeholder="اكتب اسم المطعم أو الشارع"
-                                >
-                                <button class="btn btn-outline-secondary" type="button" data-place-search-submit aria-label="بحث">
-                                    <i class="bi bi-search"></i>
-                                </button>
-                            </div>
-                            <div id="place-search-results" class="place-search-results" data-place-search-results role="listbox" hidden></div>
-                            <small class="text-muted d-block mt-2" data-place-search-status>
-                                اكتب اسم المطعم واختار المكان الصح من القائمة، أو الصق رابط Google Maps تحت.
-                            </small>
-                        </div>
-
-                        <hr class="my-3">
-
-                        <label class="form-label">رابط المطعم على Google Maps</label>
-                        <input class="form-control" type="url" dir="ltr" name="map_url" data-google-place-source data-map-link value="{{ old('map_url', $restaurant->map_url) }}" placeholder="https://www.google.com/maps/place/...">
-                        <small class="text-muted">
-                            افتح المطعم على Google Maps، دوس <b>مشاركة</b> و<b>نسخ الرابط</b>، والصقه هنا.
-                            هنستخرج الإحداثيات والـ Place ID (لوين التقييم) لوحدهم.
-                        </small>
-                        <div class="row g-2 mt-1">
-                            <div class="col-6">
-                                <label class="form-label">Latitude</label>
-                                <input id="map_latitude" class="form-control" name="map_latitude" dir="ltr" step="any" value="{{ old('map_latitude', $restaurant->map_latitude) }}">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Longitude</label>
-                                <input id="map_longitude" class="form-control" name="map_longitude" dir="ltr" step="any" value="{{ old('map_longitude', $restaurant->map_longitude) }}">
-                            </div>
-                        </div>
-                        <button id="clear-location-picker" class="btn btn-outline-secondary w-100 mt-3" type="button">
-                            <i class="bi bi-x-circle"></i> حذف التحديد
-                        </button>
-                    </div>
-                </div>
+            <label class="form-label">رابط المطعم على Google Maps</label>
+            <div class="input-group" dir="ltr">
+                <input
+                    class="form-control"
+                    type="url"
+                    name="map_url"
+                    data-google-place-source
+                    value="{{ old('map_url', $restaurant->map_url) }}"
+                    placeholder="https://www.google.com/maps/place/..."
+                >
+                @if ($restaurant->map_url)
+                    <a class="btn btn-outline-secondary" href="{{ $restaurant->map_url }}" target="_blank" rel="noopener" title="فتح على Google Maps">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                @endif
+            </div>
+            <small class="text-muted">
+                افتح المطعم على Google Maps، دوس <b>مشاركة</b> و<b>نسخ الرابط</b>، والصقه هنا.
+                الإحداثيات والـ Place ID (لوين التقييم) هنستخرجهم من الرابط لوحدهم.
+            </small>
+            <div class="form-text" data-google-place-status>
+                @if ($reviewUrl)
+                    <span class="text-success"><i class="bi bi-check-circle"></i> جاهز — الكود بيفتح صفحة التقييم مباشرة.</span>
+                @else
+                    <span class="text-danger"><i class="bi bi-exclamation-circle"></i>
+                        محتاجين رابط المطعم على Google Maps الأول، من غيره مش هينفع نفتح صفحة التقييم (النجوم والتعليق).
+                    </span>
+                @endif
             </div>
         </div>
     </div>
