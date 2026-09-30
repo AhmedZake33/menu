@@ -133,6 +133,36 @@
                 </div>
                 <div class="col-lg-4">
                     <div class="location-picker-panel">
+                        <label class="form-label">دوّر على المطعم</label>
+                        <div
+                            data-place-search
+                            data-place-search-url="{{ route('dashboard.restaurant-settings.place-search') }}"
+                            data-place-id-url="{{ route('dashboard.restaurant-settings.place-id') }}"
+                        >
+                            <div class="input-group">
+                                <input
+                                    class="form-control"
+                                    data-place-search-input
+                                    type="search"
+                                    autocomplete="off"
+                                    role="combobox"
+                                    aria-expanded="false"
+                                    aria-autocomplete="list"
+                                    aria-controls="place-search-results"
+                                    placeholder="اكتب اسم المطعم أو الشارع"
+                                >
+                                <button class="btn btn-outline-secondary" type="button" data-place-search-submit aria-label="بحث">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            <div id="place-search-results" class="place-search-results" data-place-search-results role="listbox" hidden></div>
+                            <small class="text-muted d-block mt-2" data-place-search-status>
+                                اكتب اسم المطعم واختار المكان الصح من القائمة، أو الصق رابط Google Maps تحت.
+                            </small>
+                        </div>
+
+                        <hr class="my-3">
+
                         <label class="form-label">رابط المطعم على Google Maps</label>
                         <input class="form-control" type="url" dir="ltr" name="map_url" data-google-place-source data-map-link value="{{ old('map_url', $restaurant->map_url) }}" placeholder="https://www.google.com/maps/place/...">
                         <small class="text-muted">

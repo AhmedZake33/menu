@@ -6,6 +6,7 @@ use App\Http\Controllers\Dashboard\CategoryController;
 use App\Http\Controllers\Dashboard\ItemController;
 use App\Http\Controllers\Dashboard\MenuOrderController;
 use App\Http\Controllers\Dashboard\MenuPageController;
+use App\Http\Controllers\Dashboard\PlaceSearchController;
 use App\Http\Controllers\Dashboard\QrCodeController;
 use App\Http\Controllers\Dashboard\RestaurantSettingsController;
 use App\Http\Controllers\Dashboard\ThemeController;
@@ -36,6 +37,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/', [DashboardController::class, 'restaurant'])->name('home');
         Route::get('restaurant-settings', [RestaurantSettingsController::class, 'edit'])->name('restaurant-settings.edit');
         Route::put('restaurant-settings', [RestaurantSettingsController::class, 'update'])->name('restaurant-settings.update');
+        Route::get('restaurant-settings/place-search', [PlaceSearchController::class, 'search'])->name('restaurant-settings.place-search');
+        Route::post('restaurant-settings/place-id', [PlaceSearchController::class, 'placeId'])->name('restaurant-settings.place-id');
         Route::resource('menu-pages', MenuPageController::class)->except('show')->parameters(['menu-pages' => 'menuPage']);
         Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('orders', [MenuOrderController::class, 'index'])->name('orders.index');

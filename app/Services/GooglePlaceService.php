@@ -18,6 +18,19 @@ class GooglePlaceService
         '/(?:ftid|placeid|place_id)=(0x[\da-f]+:0x[\da-f]+)/i',
     ];
 
+    /**
+     * The keyless Maps embed endpoint answers a place query with a bootstrap call to
+     * initEmbed([...]). When the query identifies a single place the array carries
+     * ["0x…:0x…","Name, Address",[lat,lng]] right next to its "ChIJ…" Place ID. Queries
+     * that Google treats as a category search instead come back as a list of anonymous
+     * candidates, and those match nothing here, so they fall through to a null result.
+     */
+    private const EMBED_PLACE_PATTERN = '/\["(?<fid>0x[\da-f]+:0x[\da-f]+)","(?<full>(?:[^"\\\\]|\\\\.)*)",\[(?<lat>-?\d+(?:\.\d+)?),(?<lng>-?\d+(?:\.\d+)?)\]/i';
+
+    private const EMBED_PLACE_ID_PATTERN = '/"(?<pid>ChIJ[A-Za-z0-9_-]{15,})"/';
+
+    private const EMBED_NAME_PATTERN = '/\],"(?<name>(?:[^"\\\\]|\\\\.)*)"/';
+
     public function extract(?string $url): ?string
     {
         if (! $url || ! $this->isGoogleHost($url)) {
@@ -137,6 +150,10 @@ class GooglePlaceService
             '/[?&]center=(-?[\d.]+),(-?[\d.]+)/',
         ];
 
+        // A pair is routinely written as %2C, and a saved map link is the only record
+        // left of a location that was picked from a search rather than pasted.
+        $url = str_ireplace('%2c', ',', $url);
+
         foreach ($patterns as $pattern) {
             if (! preg_match($pattern, $url, $matches)) {
                 continue;
@@ -151,6 +168,82 @@ class GooglePlaceService
         }
 
         return null;
+    }
+
+    /**
+     * Turn a place name typed by a person into the place Google resolved it to,
+     * without a Places API key, so a searched location can fill in the same fields
+     * a pasted link does.
+     *
+     * @return array{place_id: string, name: string, address: string, lat: float, lng: float}|null
+     */
+    public function placeFromQuery(string $query): ?array
+    {
+        $query = trim($query);
+
+        if (mb_strlen($query) < 3) {
+            return null;
+        }
+
+        $html = $this->fetch('https://www.google.com/maps?q='.rawurlencode($query).'&output=embed');
+
+        if (! $html || ! preg_match(self::EMBED_PLACE_PATTERN, $html, $anchor)) {
+            return null;
+        }
+
+        if (! preg_match(self::EMBED_PLACE_ID_PATTERN, $html, $place)) {
+            return null;
+        }
+
+        $full = $this->unescape($anchor['full']);
+        $name = $this->unescape($this->valueAfter($html, $anchor[0], self::EMBED_NAME_PATTERN) ?? $full);
+        $address = str_starts_with($full, $name) ? ltrim(trim(substr($full, strlen($name))), ',') : $full;
+
+        return [
+            'place_id' => $place['pid'],
+            'name' => $name,
+            'address' => trim($address, ' ,'),
+            'lat' => round((float) $anchor['lat'], 7),
+            'lng' => round((float) $anchor['lng'], 7),
+        ];
+    }
+
+    private function fetch(string $url): ?string
+    {
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (compatible; GooglePlaceResolver/1.0)',
+                'Accept-Language' => 'en',
+            ])
+                ->timeout(6)
+                ->get($url);
+        } catch (Throwable) {
+            return null;
+        }
+
+        return $response->successful() ? $response->body() : null;
+    }
+
+    /**
+     * The clean place name sits just past the coordinate pair, but only when the entry
+     * has no trailing id, so it is looked up from that offset rather than by position.
+     */
+    private function valueAfter(string $html, string $anchor, string $pattern): ?string
+    {
+        $rest = substr($html, (int) strpos($html, $anchor) + strlen($anchor));
+
+        return preg_match($pattern, $rest, $match) ? $match['name'] : null;
+    }
+
+    private function unescape(string $value): string
+    {
+        $decoded = preg_replace_callback(
+            '/\\\\u([0-9a-f]{4})/i',
+            fn (array $match) => mb_chr(hexdec($match[1]), 'UTF-8'),
+            $value
+        );
+
+        return str_replace(['\\/', '\\"', '\\\\'], ['/', '"', '\\'], $decoded ?? $value);
     }
 
     private function isGoogleHost(string $url): bool

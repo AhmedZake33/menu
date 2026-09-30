@@ -46,8 +46,12 @@ const coordinatePatterns = [
 ];
 
 const extractCoordinates = value => {
+    // A pair is routinely written as %2C, and both a pasted link and a searched
+    // location keep it that way, so it is matched on the decoded form.
+    const normalised = value.replace(/%2C/gi, ',');
+
     for (const pattern of coordinatePatterns) {
-        const match = value.match(pattern);
+        const match = normalised.match(pattern);
 
         if (!match) {
             continue;
@@ -130,6 +134,208 @@ const initMapPreview = (root = document) => {
     if (initial) {
         render(initial);
     }
+};
+
+const initPlaceSearch = (root = document) => {
+    const wrapper = root.querySelector('[data-place-search]');
+
+    if (!wrapper || wrapper.dataset.placeSearchReady === '1') {
+        return;
+    }
+
+    wrapper.dataset.placeSearchReady = '1';
+
+    const input = wrapper.querySelector('[data-place-search-input]');
+    const results = wrapper.querySelector('[data-place-search-results]');
+    const submitButton = wrapper.querySelector('[data-place-search-submit]');
+    const status = wrapper.querySelector('[data-place-search-status]');
+    const latitudeInput = root.querySelector('#map_latitude');
+    const longitudeInput = root.querySelector('#map_longitude');
+    const linkInput = root.querySelector('[data-map-link]');
+    const addressInput = root.querySelector('[name="address"]');
+
+    const idle = 'اكتب اسم المطعم واختار المكان الصح من القائمة، أو الصق رابط Google Maps تحت.';
+    const noResults = 'مفيش نتايج للبحث ده. جرّب اسم أطول أو اسم الشارع.';
+    const noPlaceId = '<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> المكان اتحدد والخريطة جاهزة، بس Place ID (كود التقييم) مش متأكد منه. الصق رابط المطعم من Google Maps لو عايزه.</span>';
+
+    let timer = null;
+    let request = 0;
+
+    const say = message => {
+        status.innerHTML = message;
+    };
+
+    const close = () => {
+        results.innerHTML = '';
+        results.hidden = true;
+        input.setAttribute('aria-expanded', 'false');
+    };
+
+    // Reuses the handlers already bound to the link and coordinate inputs, so a picked
+    // place and a pasted link both end up in exactly the same state.
+    const applyLink = value => {
+        linkInput.value = value;
+        linkInput.dispatchEvent(new Event('input', { bubbles: true }));
+        linkInput.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    const applyCoordinates = (lat, lng) => {
+        latitudeInput.value = lat.toFixed(7);
+        longitudeInput.value = lng.toFixed(7);
+        latitudeInput.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    const pick = async place => {
+        const coordinates = `${place.lat.toFixed(7)},${place.lng.toFixed(7)}`;
+
+        close();
+        applyCoordinates(place.lat, place.lng);
+        applyLink(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coordinates)}`);
+
+        if (addressInput && !addressInput.value.trim()) {
+            addressInput.value = place.address;
+        }
+
+        say('<span class="text-muted"><span class="spinner-border spinner-border-sm"></span> جاري التأكد من بيانات المكان على Google…</span>');
+
+        try {
+            const response = await fetch(wrapper.dataset.placeIdUrl, {
+                method: 'POST',
+                body: JSON.stringify({ name: place.name, address: place.address }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
+            const { place_id: placeId } = await response.json();
+
+            if (placeId) {
+                applyLink(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.label)}&query_place_id=${placeId}`);
+                say('<span class="text-success"><i class="bi bi-check-circle"></i> المكان اتحدد وكود التقييم جاهز. دوس حفظ في الأسفل.</span>');
+
+                return;
+            }
+
+            say(noPlaceId);
+        } catch (error) {
+            say(noPlaceId);
+        }
+    };
+
+    const render = places => {
+        results.innerHTML = '';
+
+        if (places.length === 0) {
+            close();
+            say(noResults);
+
+            return;
+        }
+
+        places.forEach(place => {
+            const option = document.createElement('button');
+            const name = document.createElement('span');
+            const address = document.createElement('span');
+
+            option.type = 'button';
+            option.className = 'place-search-result';
+            option.setAttribute('role', 'option');
+            name.className = 'place-search-result-name';
+            name.textContent = place.name;
+            address.className = 'place-search-result-address';
+            address.textContent = place.address;
+            option.append(name, address);
+            option.addEventListener('click', () => pick(place));
+            results.append(option);
+        });
+
+        results.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+    };
+
+    const run = async () => {
+        const query = input.value.trim();
+
+        if (query.length < 3) {
+            close();
+
+            return;
+        }
+
+        // A link pasted here is the other half of this box: hand it to the map input
+        // instead of searching for a place called "https".
+        if (/^https?:\/\//i.test(query)) {
+            input.value = '';
+            say(idle);
+            applyLink(query);
+
+            return;
+        }
+
+        const current = ++request;
+        results.hidden = false;
+        say('<span class="text-muted"><span class="spinner-border spinner-border-sm"></span> جاري البحث…</span>');
+
+        try {
+            const response = await fetch(`${wrapper.dataset.placeSearchUrl}?q=${encodeURIComponent(query)}`, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) {
+                throw new Error('search failed');
+            }
+
+            const { places } = await response.json();
+
+            if (current !== request) {
+                return;
+            }
+
+            render(places ?? []);
+        } catch (error) {
+            if (current === request) {
+                close();
+                say('<span class="text-danger">مقدرناش نعمل البحث دلوقتي. جرّب تاني أو الصق رابط Google Maps.</span>');
+            }
+        }
+    };
+
+    input.addEventListener('input', () => {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(run, 350);
+    });
+
+    input.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            close();
+
+            return;
+        }
+
+        // The whole settings form wraps this box, so Enter has to search rather than
+        // post every restaurant field.
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            window.clearTimeout(timer);
+            run();
+        }
+    });
+
+    submitButton?.addEventListener('click', () => {
+        window.clearTimeout(timer);
+        run();
+    });
+
+    document.addEventListener('click', event => {
+        if (!wrapper.contains(event.target)) {
+            close();
+        }
+    });
+
+    say(idle);
 };
 
 const initPanelSidebar = (root = document) => {
@@ -621,6 +827,7 @@ const initDashboardWidgets = (root = document) => {
     initMenuSearch(root);
     initPasswordToggles(root);
     initMapPreview(root);
+    initPlaceSearch(root);
     initGooglePlaceId(root);
     initPublicMapTabs(root);
     initPublicOrdering(root);
