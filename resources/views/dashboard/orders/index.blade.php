@@ -35,7 +35,7 @@
                         <small class="d-block text-muted">{{ $order->customer_email }}</small>
                         @if($order->customer_phone)<small class="d-block text-muted">{{ $order->customer_phone }}</small>@endif
                     </td>
-                    <td>{{ $order->table_number }}</td>
+                    <td>{{ $order->table_number ?? '—' }}</td>
                     <td>
                         @foreach($order->items as $item)
                             <span class="d-block">{{ $item->quantity }}× {{ $item->item_name }}</span>

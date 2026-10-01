@@ -98,7 +98,7 @@
                     <input class="form-control" type="number" name="tables_count" min="0" max="500" value="{{ old('tables_count', $restaurant->tables_count) }}">
                     <small class="text-muted">
                         @if($restaurant->ordering_enabled)
-                            يستخدمها العملاء لاختيار رقم الطاولة عند إرسال الطلب.
+                            اختياري — لو سيبته 0 مش هيظهر اختيار الطاولة، والعميل يقدر يطلب من غير ما يحدد طاولة.
                         @else
                             الطلبات غير مفعلة من الأدمن حاليًا.
                         @endif

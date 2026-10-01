@@ -129,15 +129,13 @@ class PublicOrderController extends Controller
     {
         abort_unless($restaurant->isAvailable() && $restaurant->ordering_enabled, 404);
 
-        if ($restaurant->tables_count < 1) {
-            throw ValidationException::withMessages(['table_number' => 'الطلب غير متاح حاليًا لأن عدد الطاولات غير محدد.']);
-        }
-
         $data = $request->validate([
             'customer_name' => ['required', 'string', 'max:150'],
             'customer_email' => ['required', 'email', 'max:150'],
             'customer_phone' => ['nullable', 'string', 'max:30'],
-            'table_number' => ['required', 'integer', 'min:1', 'max:'.max(1, (int) $restaurant->tables_count)],
+            // A table is a convenience, not a requirement: an order with no table is a
+            // takeaway or a delivery, so it is accepted and stored without one.
+            'table_number' => ['nullable', 'integer', 'min:1', 'max:'.max(1, (int) $restaurant->tables_count)],
             'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.id' => ['required', 'integer'],
@@ -178,7 +176,7 @@ class PublicOrderController extends Controller
                 'customer_name' => $data['customer_name'],
                 'customer_email' => $data['customer_email'],
                 'customer_phone' => $data['customer_phone'] ?? null,
-                'table_number' => $data['table_number'],
+                'table_number' => $data['table_number'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'subtotal' => $subtotal,
                 'total' => $subtotal,

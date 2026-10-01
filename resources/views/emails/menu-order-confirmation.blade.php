@@ -14,7 +14,7 @@
     <div class="card">
         <h1>تم استلام طلبك</h1>
         <p>مرحبًا {{ $order->customer_name }}، تم تسجيل طلبك في {{ $order->restaurant->name }}.</p>
-        <p>رقم الطلب: <strong>#{{ $order->id }}</strong><br>رقم الطاولة: <strong>{{ $order->table_number }}</strong></p>
+        <p>رقم الطلب: <strong>#{{ $order->id }}</strong>@if($order->table_number)<br>رقم الطاولة: <strong>{{ $order->table_number }}</strong>@endif</p>
 
         <table>
             <thead>

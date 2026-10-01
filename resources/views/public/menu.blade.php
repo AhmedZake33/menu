@@ -149,7 +149,7 @@
                                 @unless($item->is_available)
                                     <span class="badge text-bg-secondary">غير متوفر حاليًا</span>
                                 @endunless
-                                @if($restaurant->ordering_enabled && $restaurant->tables_count > 0 && $item->is_available)
+                                @if($restaurant->ordering_enabled && $item->is_available)
                                     <button
                                         class="btn btn-primary w-100 mt-3"
                                         type="button"
@@ -205,7 +205,7 @@
     @endforeach
 </main>
 
-@if($restaurant->ordering_enabled && $restaurant->tables_count > 0)
+@if($restaurant->ordering_enabled)
     <div class="public-order-bar" data-order-bar hidden>
         <div>
             <strong>طلبك</strong>
@@ -244,15 +244,18 @@
                                 <label class="form-label">الهاتف</label>
                                 <input class="form-control" name="customer_phone" value="{{ old('customer_phone') }}">
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">رقم الطاولة *</label>
-                                <select class="form-select" name="table_number" required>
-                                    <option value="">اختر الطاولة</option>
-                                    @for($table = 1; $table <= $restaurant->tables_count; $table++)
-                                        <option value="{{ $table }}" @selected((string) old('table_number') === (string) $table)>طاولة {{ $table }}</option>
-                                    @endfor
-                                </select>
-                            </div>
+                            @if($restaurant->tables_count > 0)
+                                <div class="col-md-6">
+                                    <label class="form-label">رقم الطاولة</label>
+                                    <select class="form-select" name="table_number">
+                                        <option value="">بدون رقم طاولة</option>
+                                        @for($table = 1; $table <= $restaurant->tables_count; $table++)
+                                            <option value="{{ $table }}" @selected((string) old('table_number') === (string) $table)>طاولة {{ $table }}</option>
+                                        @endfor
+                                    </select>
+                                    <small class="text-muted">اختياري — سيبه فاضي لو الطلب توصيل أو سفري.</small>
+                                </div>
+                            @endif
                             <div class="col-12">
                                 <label class="form-label">ملاحظات</label>
                                 <textarea class="form-control" name="notes" rows="3">{{ old('notes') }}</textarea>

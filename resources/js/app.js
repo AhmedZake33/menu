@@ -87,7 +87,9 @@ const initOrderLiveNotifications = () => {
             const message = document.querySelector('[data-order-live-message]');
 
             if (message) {
-                message.textContent = `طلب #${order.id} - طاولة ${order.table_number} - ${order.total} ${order.currency}`;
+                const table = order.table_number ? `طاولة ${order.table_number} - ` : '';
+
+                message.textContent = `طلب #${order.id} - ${table}${order.total} ${order.currency}`;
             }
 
             if (toast) {
