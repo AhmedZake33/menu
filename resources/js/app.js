@@ -525,7 +525,243 @@ const initGooglePlaceId = (root = document) => {
     }
 };
 
+const initCashier = (root = document) => {
+    root.querySelectorAll('[data-pos]:not([data-pos-ready])').forEach(pos => {
+        pos.dataset.posReady = '1';
+
+        const form = pos.querySelector('[data-pos-form]');
+        const linesBox = pos.querySelector('[data-pos-lines]');
+        const emptyNote = pos.querySelector('[data-pos-empty]');
+        const submit = pos.querySelector('[data-pos-submit]');
+        const discountInput = pos.querySelector('[data-pos-discount]');
+        const paidInput = pos.querySelector('[data-pos-paid]');
+        const taxRate = parseFloat(pos.dataset.tax) || 0;
+        const serviceRate = parseFloat(pos.dataset.service) || 0;
+        const round = value => Math.round((value + Number.EPSILON) * 100) / 100;
+        const money = value => round(value).toFixed(2);
+        const out = (name, value) => {
+            const element = pos.querySelector(`[data-pos-${name}]`);
+
+            if (element) {
+                element.textContent = money(value);
+            }
+        };
+
+        // id => { name, price, quantity }, in the order items were added.
+        const cart = new Map();
+
+        const element = (tag, className, text) => {
+            const node = document.createElement(tag);
+
+            if (className) {
+                node.className = className;
+            }
+
+            if (text !== undefined) {
+                node.textContent = text;
+            }
+
+            return node;
+        };
+
+        const hidden = (name, value) => {
+            const input = element('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+
+            return input;
+        };
+
+        const totals = () => {
+            let subtotal = 0;
+            cart.forEach(line => {
+                subtotal += line.price * line.quantity;
+            });
+            subtotal = round(subtotal);
+
+            const discount = Math.min(subtotal, Math.max(0, parseFloat(discountInput?.value) || 0));
+            const net = subtotal - discount;
+            const service = round(net * serviceRate / 100);
+            const tax = round((net + service) * taxRate / 100);
+
+            return { subtotal, discount, service, tax, total: round(net + service + tax) };
+        };
+
+        const renderTotals = () => {
+            const sums = totals();
+            out('subtotal', sums.subtotal);
+            out('discount-out', sums.discount);
+            out('service', sums.service);
+            out('tax', sums.tax);
+            out('total', sums.total);
+
+            const discountRow = pos.querySelector('[data-pos-discount-row]');
+
+            if (discountRow) {
+                discountRow.hidden = sums.discount <= 0;
+            }
+
+            const paid = parseFloat(paidInput?.value) || 0;
+            out('change', Math.max(0, paid - sums.total));
+            submit.disabled = cart.size === 0;
+        };
+
+        const render = () => {
+            linesBox.querySelectorAll('.pos-line').forEach(line => line.remove());
+            emptyNote.hidden = cart.size > 0;
+
+            let index = 0;
+            cart.forEach((line, id) => {
+                const row = element('div', 'pos-line');
+                const name = element('div', 'pos-line-name', line.name);
+                name.append(element('small', '', money(line.price)));
+
+                const quantity = element('div', 'pos-qty');
+                const minus = element('button', '', '−');
+                const plus = element('button', '', '+');
+                minus.type = 'button';
+                plus.type = 'button';
+                minus.setAttribute('aria-label', `إنقاص ${line.name}`);
+                plus.setAttribute('aria-label', `زيادة ${line.name}`);
+                minus.addEventListener('click', () => change(id, -1));
+                plus.addEventListener('click', () => change(id, 1));
+                quantity.append(plus, element('b', '', String(line.quantity)), minus);
+
+                row.append(
+                    name,
+                    quantity,
+                    element('div', 'pos-line-total', money(line.price * line.quantity)),
+                    hidden(`items[${index}][id]`, id),
+                    hidden(`items[${index}][quantity]`, line.quantity),
+                );
+                linesBox.append(row);
+                index += 1;
+            });
+
+            renderTotals();
+        };
+
+        const change = (id, delta) => {
+            const line = cart.get(id);
+
+            if (!line) {
+                return;
+            }
+
+            line.quantity = Math.min(999, line.quantity + delta);
+
+            if (line.quantity <= 0) {
+                cart.delete(id);
+            }
+
+            render();
+        };
+
+        pos.querySelectorAll('[data-pos-item]').forEach(button => {
+            button.addEventListener('click', () => {
+                const id = button.dataset.id;
+
+                if (cart.has(id)) {
+                    change(id, 1);
+
+                    return;
+                }
+
+                cart.set(id, { name: button.dataset.name, price: parseFloat(button.dataset.price) || 0, quantity: 1 });
+                render();
+            });
+        });
+
+        // Search and category chips narrow the same grid together.
+        let activeCategory = '';
+        const search = pos.querySelector('[data-pos-search]');
+        const filter = () => {
+            const query = (search?.value || '').trim().toLowerCase();
+            let visible = 0;
+
+            pos.querySelectorAll('[data-pos-item]').forEach(button => {
+                const match = (!activeCategory || button.dataset.cat === activeCategory)
+                    && (!query || button.dataset.name.toLowerCase().includes(query));
+                button.hidden = !match;
+                visible += match ? 1 : 0;
+            });
+
+            pos.querySelector('[data-pos-no-results]').hidden = visible > 0;
+        };
+
+        search?.addEventListener('input', filter);
+        pos.querySelectorAll('[data-pos-cat]').forEach(chip => {
+            chip.addEventListener('click', () => {
+                activeCategory = chip.dataset.posCat;
+                pos.querySelectorAll('[data-pos-cat]').forEach(other => other.classList.toggle('active', other === chip));
+                filter();
+            });
+        });
+
+        const syncOrderType = () => {
+            const table = pos.querySelector('[data-pos-table]');
+
+            if (table) {
+                table.hidden = form.querySelector('[data-pos-type]:checked')?.value !== 'dine_in';
+            }
+        };
+
+        const syncMethod = () => {
+            const cash = pos.querySelector('[data-pos-cash]');
+
+            if (cash) {
+                cash.hidden = form.querySelector('[data-pos-method]:checked')?.value !== 'cash';
+            }
+        };
+
+        form.querySelectorAll('[data-pos-type]').forEach(input => input.addEventListener('change', syncOrderType));
+        form.querySelectorAll('[data-pos-method]').forEach(input => input.addEventListener('change', syncMethod));
+        discountInput?.addEventListener('input', renderTotals);
+        paidInput?.addEventListener('input', renderTotals);
+        pos.querySelector('[data-pos-clear]')?.addEventListener('click', () => {
+            cart.clear();
+            render();
+        });
+        form.addEventListener('submit', event => {
+            if (cart.size === 0) {
+                event.preventDefault();
+
+                return;
+            }
+
+            // One click, one invoice.
+            submit.disabled = true;
+        });
+
+        syncOrderType();
+        syncMethod();
+        render();
+    });
+};
+
+const initColorSwatches = (root = document) => {
+    root.querySelectorAll('[data-color-swatches]:not([data-swatches-ready])').forEach(box => {
+        box.dataset.swatchesReady = '1';
+        const custom = box.querySelector('input[type="color"]');
+
+        // The colour input is what gets saved; a preset only fills it in.
+        box.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                custom.value = radio.value;
+            });
+        });
+        custom.addEventListener('input', () => {
+            box.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = radio.value === custom.value;
+            });
+        });
+    });
+};
+
 const initDashboardWidgets = (root = document) => {
+    initColorSwatches(root);
+    initCashier(root);
     initPanelSidebar(root);
     initSortables(root);
     initMenuSearch(root);

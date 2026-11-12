@@ -15,6 +15,7 @@ class MenuOrderController extends Controller
         $orders = MenuOrder::query()
             ->with('items')
             ->where('restaurant_id', $request->user()->restaurant_id)
+            ->where('source', 'menu')
             ->latest()
             ->paginate(20);
 

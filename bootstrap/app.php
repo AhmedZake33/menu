@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureModuleEnabled;
 use App\Http\Middleware\EnsureRestaurantIsActive;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RequireRole;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'active' => EnsureUserIsActive::class,
             'restaurant.active' => EnsureRestaurantIsActive::class,
             'role' => RequireRole::class,
+            'module' => EnsureModuleEnabled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

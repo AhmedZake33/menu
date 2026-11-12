@@ -69,7 +69,7 @@ class PublicOrderController extends Controller
             'verification_code' => ['required', 'digits:6'],
         ]);
 
-        abort_unless($restaurant->isAvailable() && $restaurant->ordering_enabled, 404);
+        abort_unless($restaurant->isAvailable() && $restaurant->hasModule('orders') && $restaurant->hasModule('public_menu'), 404);
 
         $pending = PendingMenuOrder::query()
             ->where('restaurant_id', $restaurant->id)
@@ -127,7 +127,7 @@ class PublicOrderController extends Controller
 
     private function validatedOrderData(Request $request, Restaurant $restaurant): array
     {
-        abort_unless($restaurant->isAvailable() && $restaurant->ordering_enabled, 404);
+        abort_unless($restaurant->isAvailable() && $restaurant->hasModule('orders') && $restaurant->hasModule('public_menu'), 404);
 
         $data = $request->validate([
             'customer_name' => ['required', 'string', 'max:150'],

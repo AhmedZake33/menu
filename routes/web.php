@@ -2,22 +2,26 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RestaurantController;
+use App\Http\Controllers\Dashboard\CashierController;
 use App\Http\Controllers\Dashboard\CategoryController;
 use App\Http\Controllers\Dashboard\ItemController;
 use App\Http\Controllers\Dashboard\MenuOrderController;
 use App\Http\Controllers\Dashboard\MenuPageController;
 use App\Http\Controllers\Dashboard\QrCodeController;
+use App\Http\Controllers\Dashboard\ReservationController;
 use App\Http\Controllers\Dashboard\RestaurantSettingsController;
 use App\Http\Controllers\Dashboard\ThemeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicMenuController;
 use App\Http\Controllers\PublicOrderController;
+use App\Http\Controllers\PublicReservationController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
 Route::get('/r/{restaurant}', [PublicMenuController::class, 'restaurant'])->name('public.restaurant');
 Route::post('/r/{restaurant}/orders/code', [PublicOrderController::class, 'sendCode'])->name('public.orders.code');
 Route::post('/r/{restaurant}/orders/confirm', [PublicOrderController::class, 'confirm'])->name('public.orders.confirm');
+Route::post('/r/{restaurant}/reservations', [PublicReservationController::class, 'store'])->middleware('throttle:6,1')->name('public.reservations.store');
 Route::get('/r/{restaurant}/menu/{menuPage}', [PublicMenuController::class, 'menu'])->scopeBindings()->name('public.menu');
 Route::get('/menu/{restaurant}', [PublicMenuController::class, 'restaurant'])->name('public.short');
 
@@ -34,19 +38,40 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     Route::prefix('dashboard')->name('dashboard.')->middleware(['role:restaurant_admin', 'restaurant.active'])->group(function () {
         Route::get('/', [DashboardController::class, 'restaurant'])->name('home');
-        Route::get('restaurant-settings', [RestaurantSettingsController::class, 'edit'])->name('restaurant-settings.edit');
-        Route::put('restaurant-settings', [RestaurantSettingsController::class, 'update'])->name('restaurant-settings.update');
-        Route::resource('menu-pages', MenuPageController::class)->except('show')->parameters(['menu-pages' => 'menuPage']);
-        Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::get('orders', [MenuOrderController::class, 'index'])->name('orders.index');
-        Route::patch('orders/{order}', [MenuOrderController::class, 'update'])->name('orders.update');
-        Route::delete('items/{item}/image', [ItemController::class, 'destroyImage'])->name('items.image.destroy');
-        Route::resource('items', ItemController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::get('menu-pages/{menuPage}/theme', [ThemeController::class, 'edit'])->name('theme.edit');
-        Route::put('menu-pages/{menuPage}/theme', [ThemeController::class, 'update'])->name('theme.update');
-        Route::get('restaurant/qr/{format}', [QrCodeController::class, 'restaurant'])->name('restaurant.qr');
-        Route::get('restaurant/google-review-qr/{format}', [QrCodeController::class, 'review'])->name('restaurant.google-review-qr');
-        Route::get('menu-pages/{menuPage}/qr/{format}', QrCodeController::class)->name('qr');
+        Route::middleware('module:restaurant_settings')->group(function () {
+            Route::get('restaurant-settings', [RestaurantSettingsController::class, 'edit'])->name('restaurant-settings.edit');
+            Route::put('restaurant-settings', [RestaurantSettingsController::class, 'update'])->name('restaurant-settings.update');
+        });
+        Route::resource('menu-pages', MenuPageController::class)->except('show')->parameters(['menu-pages' => 'menuPage'])->middleware('module:menu_pages');
+        Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('module:categories');
+        Route::middleware('module:orders')->group(function () {
+            Route::get('orders', [MenuOrderController::class, 'index'])->name('orders.index');
+            Route::patch('orders/{order}', [MenuOrderController::class, 'update'])->name('orders.update');
+        });
+        Route::middleware('module:items')->group(function () {
+            Route::delete('items/{item}/image', [ItemController::class, 'destroyImage'])->name('items.image.destroy');
+            Route::resource('items', ItemController::class)->only(['index', 'store', 'update', 'destroy']);
+        });
+        Route::middleware('module:theme')->group(function () {
+            Route::get('menu-pages/{menuPage}/theme', [ThemeController::class, 'edit'])->name('theme.edit');
+            Route::put('menu-pages/{menuPage}/theme', [ThemeController::class, 'update'])->name('theme.update');
+        });
+        Route::get('restaurant/qr/{format}', [QrCodeController::class, 'restaurant'])->name('restaurant.qr')->middleware('module:qr');
+        Route::get('restaurant/google-review-qr/{format}', [QrCodeController::class, 'review'])->name('restaurant.google-review-qr')->middleware('module:google_review');
+        Route::get('menu-pages/{menuPage}/qr/{format}', QrCodeController::class)->name('qr')->middleware('module:qr');
+        Route::middleware('module:reservations')->group(function () {
+            Route::get('reservations', [ReservationController::class, 'index'])->name('reservations.index');
+            Route::patch('reservations/{reservation}', [ReservationController::class, 'update'])->name('reservations.update');
+        });
+        Route::prefix('cashier')->name('cashier.')->middleware('module:cashier')->group(function () {
+            Route::get('/', [CashierController::class, 'index'])->name('index');
+            Route::post('sales', [CashierController::class, 'store'])->name('sales.store');
+            Route::post('orders/{order}/pay', [CashierController::class, 'pay'])->name('orders.pay');
+            Route::get('receipt/{order}', [CashierController::class, 'receipt'])->name('receipt');
+            Route::get('report', [CashierController::class, 'report'])->name('report');
+            Route::get('settings', [CashierController::class, 'settings'])->name('settings');
+            Route::put('settings', [CashierController::class, 'updateSettings'])->name('settings.update');
+        });
     });
 });
 

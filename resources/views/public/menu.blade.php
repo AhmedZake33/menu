@@ -68,6 +68,58 @@
         </div>
     @endif
 
+    @php($showItemImages = $menuPage->theme->show_item_images && $restaurant->hasModule('item_images'))
+
+    @if($restaurant->hasModule('reservations'))
+        <div class="text-center mb-4">
+            <button class="btn btn-primary px-4" type="button" style="background:var(--button);border-color:var(--button)" data-bs-toggle="modal" data-bs-target="#reservationModal">
+                <i class="bi bi-calendar-check"></i> احجز طاولة
+            </button>
+        </div>
+        <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <form class="modal-content" method="post" action="{{ route('public.reservations.store', $restaurant) }}">
+                    @csrf
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="reservationModalLabel">حجز طاولة في {{ $restaurant->name }}</h2>
+                        <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" for="reservationName">الاسم</label>
+                                <input class="form-control" id="reservationName" name="customer_name" maxlength="150" required value="{{ old('customer_name') }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="reservationPhone">رقم الموبايل</label>
+                                <input class="form-control" id="reservationPhone" name="customer_phone" type="tel" dir="ltr" maxlength="30" required value="{{ old('customer_phone') }}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="reservationDate">التاريخ</label>
+                                <input class="form-control" id="reservationDate" name="date" type="date" min="{{ now()->format('Y-m-d') }}" required value="{{ old('date') }}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="reservationTime">الوقت</label>
+                                <input class="form-control" id="reservationTime" name="time" type="time" required value="{{ old('time') }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="reservationGuests">عدد الأفراد</label>
+                                <input class="form-control" id="reservationGuests" name="guests" type="number" min="1" max="50" required value="{{ old('guests', 2) }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="reservationNotes">ملاحظات (اختياري)</label>
+                                <textarea class="form-control" id="reservationNotes" name="notes" rows="2" maxlength="500">{{ old('notes') }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary w-100" style="background:var(--button);border-color:var(--button)">إرسال طلب الحجز</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
     @if($menuPages->count() > 1 || $mapEmbedUrl)
         <nav class="menu-page-links mb-4" aria-label="روابط صفحات المنيو والموقع">
             @foreach($menuPages as $page)
@@ -130,7 +182,7 @@
                 @forelse($category->items as $item)
                     <article class="menu-searchable col-{{ 12 / $menuPage->theme->items_per_row_mobile }} col-md-{{ 12 / $menuPage->theme->items_per_row_tablet }} col-lg-{{ 12 / $menuPage->theme->items_per_row_desktop }}" data-search="{{ $item->name }} {{ $item->short_description }}">
                         <div class="menu-item card h-100 overflow-hidden shadow-{{ $menuPage->theme->card_shadow }}">
-                            @if($menuPage->theme->show_item_images && $item->image)
+                            @if($showItemImages && $item->image)
                                 <button class="public-menu-image-button" type="button" data-bs-toggle="modal" data-bs-target="#publicItemImage{{ $item->id }}" aria-label="عرض صورة {{ $item->name }}">
                                     <img src="{{ Storage::url($item->image) }}" class="menu-image image-{{ $menuPage->theme->image_shape }} image-{{ $menuPage->theme->image_position }}" alt="{{ $item->name }}">
                                     <span><i class="bi bi-arrows-fullscreen"></i></span>
@@ -165,7 +217,7 @@
                         </div>
                     </article>
 
-                    @if($menuPage->theme->show_item_images && $item->image)
+                    @if($showItemImages && $item->image)
                         <div class="modal fade" id="publicItemImage{{ $item->id }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-xl">
                                 <div class="modal-content image-preview-modal item-detail-preview-modal">

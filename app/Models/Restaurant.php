@@ -19,6 +19,8 @@ class Restaurant extends Model
             'is_active' => 'boolean',
             'ordering_enabled' => 'boolean',
             'tables_count' => 'integer',
+            'modules' => 'array',
+            'settings' => 'array',
             'expires_at' => 'datetime',
             'map_latitude' => 'decimal:7',
             'map_longitude' => 'decimal:7',
@@ -33,6 +35,95 @@ class Restaurant extends Model
     public function isAvailable(): bool
     {
         return $this->is_active && ! $this->isExpired();
+    }
+
+    /**
+     * Whether this client has a module. Anything not listed in config/modules.php is
+     * off. "orders" lives in the ordering_enabled column, which the public menu
+     * already reads, so there is a single source of truth for it.
+     */
+    public function hasModule(string $key): bool
+    {
+        $definition = config("modules.list.$key");
+
+        if (! $definition) {
+            return false;
+        }
+
+        if ($key === 'orders') {
+            return (bool) $this->ordering_enabled;
+        }
+
+        return (bool) (($this->modules ?? [])[$key] ?? $definition['default']);
+    }
+
+    /** @return array<string, bool> */
+    public function moduleStates(): array
+    {
+        return collect(config('modules.list'))->map(fn ($definition, $key) => $this->hasModule($key))->all();
+    }
+
+    /** Dashboard colour for this client; falls back to the system default. */
+    public function brandColor(): string
+    {
+        $color = data_get($this->settings, 'brand_color');
+
+        return is_string($color) && preg_match('/^#[0-9a-f]{6}$/i', $color) ? strtolower($color) : config('modules.brand.default');
+    }
+
+    /** A limit of 0 (or none saved) means unlimited. */
+    public function limit(string $key): int
+    {
+        return max(0, (int) data_get($this->settings, "limits.$key", 0));
+    }
+
+    public function reachedLimit(string $key, int $current): bool
+    {
+        return $this->limit($key) > 0 && $current >= $this->limit($key);
+    }
+
+    /** @return array{tax_percent: float, service_percent: float, allow_discount: bool, payment_methods: list<string>, receipt_footer: ?string} */
+    public function cashierSettings(): array
+    {
+        $saved = (array) data_get($this->settings, 'cashier', []);
+        $merged = [...config('modules.cashier_defaults'), ...$saved];
+        $methods = array_values(array_intersect(array_keys(config('modules.payment_methods')), (array) $merged['payment_methods']));
+
+        return [
+            'tax_percent' => (float) $merged['tax_percent'],
+            'service_percent' => (float) $merged['service_percent'],
+            'allow_discount' => (bool) $merged['allow_discount'],
+            'payment_methods' => $methods ?: ['cash'],
+            'receipt_footer' => $merged['receipt_footer'],
+        ];
+    }
+
+    /** @return array<string, string> key => label, only the methods this client accepts */
+    public function paymentMethods(): array
+    {
+        return array_intersect_key(config('modules.payment_methods'), array_flip($this->cashierSettings()['payment_methods']));
+    }
+
+    public function saveCashierSettings(array $values): void
+    {
+        $settings = $this->settings ?? [];
+        $settings['cashier'] = [...($settings['cashier'] ?? []), ...$values];
+        $this->update(['settings' => $settings]);
+    }
+
+    /**
+     * Service is charged on the discounted subtotal, tax on subtotal + service.
+     *
+     * @return array{subtotal: float, discount: float, service: float, tax: float, total: float}
+     */
+    public function cashierTotals(float $subtotal, float $discount = 0): array
+    {
+        $cashier = $this->cashierSettings();
+        $net = max(0, $subtotal - $discount);
+        $service = round($net * $cashier['service_percent'] / 100, 2);
+        $tax = round(($net + $service) * $cashier['tax_percent'] / 100, 2);
+
+        return ['subtotal' => $subtotal, 'discount' => $discount, 'service' => $service, 'tax' => $tax, 'total' => round($net + $service + $tax, 2)];
     }
 
     public function getRouteKeyName(): string
@@ -98,6 +189,11 @@ class Restaurant extends Model
     public function menuViews()
     {
         return $this->hasMany(MenuView::class);
+    }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class);
     }
 
     public function orders()

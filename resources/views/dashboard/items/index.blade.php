@@ -1,6 +1,7 @@
 @extends('layouts.panel')
 
 @section('content')
+@php($canImages = auth()->user()->restaurant->hasModule('item_images'))
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
     <div>
         <span class="eyebrow text-primary">إدارة المنيو</span>
@@ -44,10 +45,12 @@
                 <label class="form-label">وصف مختصر</label>
                 <input class="form-control" name="short_description" placeholder="وصف يظهر تحت اسم الصنف في المنيو">
             </div>
+            @if($canImages)
             <div class="col-lg-4">
                 <label class="form-label">صورة الصنف</label>
                 <input class="form-control" type="file" name="image" accept="image/*">
             </div>
+            @endif
             <div class="col-12 d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div class="item-flags create-flags">
                     <label class="form-check form-switch">
@@ -92,7 +95,7 @@
                     <tr>
                         <td>
                             <div class="d-flex align-items-center gap-3">
-                                @if($item->image)
+                                @if($canImages && $item->image)
                                     <button class="item-thumb item-thumb-button" type="button" data-bs-toggle="modal" data-bs-target="#viewItemImage{{ $item->id }}" aria-label="عرض صورة {{ $item->name }}">
                                         <img src="{{ Storage::url($item->image) }}" alt="{{ $item->name }}">
                                     </button>
@@ -123,7 +126,7 @@
                         </td>
                         <td class="text-end">
                             <div class="d-flex justify-content-end gap-2">
-                                @if($item->image)
+                                @if($canImages && $item->image)
                                     <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="modal" data-bs-target="#viewItemImage{{ $item->id }}">
                                         <i class="bi bi-arrows-fullscreen"></i> الصورة
                                     </button>
@@ -142,7 +145,7 @@
                         </td>
                     </tr>
 
-                    @if($item->image)
+                    @if($canImages && $item->image)
                         <div class="modal fade" id="viewItemImage{{ $item->id }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                 <div class="modal-content image-preview-modal">
@@ -170,23 +173,25 @@
                                     </div>
                                     <div class="modal-body">
                                         <div class="row g-3">
+                                            @if($canImages)
                                             <div class="col-md-5">
                                                 <label class="form-label">الصورة</label>
                                                 <div class="item-image-editor">
-                                                    @if($item->image)
+                                                    @if($canImages && $item->image)
                                                         <img src="{{ Storage::url($item->image) }}" alt="{{ $item->name }}">
                                                     @else
                                                         <div><i class="bi bi-image"></i><span>لا توجد صورة</span></div>
                                                     @endif
                                                 </div>
                                                 <input class="form-control mt-2" type="file" name="image" accept="image/*">
-                                                @if($item->image)
+                                                @if($canImages && $item->image)
                                                     <button class="btn btn-outline-danger w-100 mt-2" type="submit" form="deleteItemImage{{ $item->id }}" onclick="return confirm('حذف صورة الصنف؟')">
                                                         <i class="bi bi-image"></i> حذف الصورة
                                                     </button>
                                                 @endif
                                             </div>
-                                            <div class="col-md-7">
+                                            @endif
+                                            <div class="{{ $canImages ? 'col-md-7' : 'col-12' }}">
                                                 <div class="row g-3">
                                                     <div class="col-12">
                                                         <label class="form-label">اسم الصنف</label>
@@ -235,7 +240,7 @@
                                         <button class="btn btn-primary"><i class="bi bi-check2"></i> حفظ التعديل</button>
                                     </div>
                                 </form>
-                                @if($item->image)
+                                @if($canImages && $item->image)
                                     <form id="deleteItemImage{{ $item->id }}" method="post" action="{{ route('dashboard.items.image.destroy', $item) }}">
                                         @csrf
                                         @method('delete')

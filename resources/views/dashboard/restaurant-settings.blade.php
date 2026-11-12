@@ -143,6 +143,7 @@
         </div>
     </div>
 
+    @if($restaurant->hasModule('google_review'))
     <div class="card settings-card mb-4">
         <div class="card-body p-4">
             <h2 class="settings-section-title"><i class="bi bi-star"></i> QR التقييم على Google Maps</h2>
@@ -203,6 +204,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <div class="card settings-card mb-4">
         <div class="card-body p-4">

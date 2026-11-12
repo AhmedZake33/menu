@@ -3,11 +3,11 @@
 @section('title', 'طلبات العملاء')
 
 @section('content')
-<div class="settings-heading">
+@php($statuses = ['pending' => 'جديد', 'confirmed' => 'مؤكد', 'preparing' => 'قيد التحضير', 'completed' => 'مكتمل', 'cancelled' => 'ملغي'])
+<div class="page-head">
     <div>
-        <span class="eyebrow text-primary">طلبات المنيو</span>
         <h1>طلبات العملاء</h1>
-        <p class="text-muted">الطلبات التي سجلها العملاء من المنيو الإلكتروني.</p>
+        <p>الطلبات التي سجلها العملاء من المنيو الإلكتروني.</p>
     </div>
 </div>
 
@@ -21,6 +21,7 @@
                 <th>الأصناف</th>
                 <th>الإجمالي</th>
                 <th>الحالة</th>
+                <th>الدفع</th>
                 <th>الإيميل</th>
                 <th>التاريخ</th>
                 <th></th>
@@ -29,7 +30,7 @@
         <tbody>
             @forelse($orders as $order)
                 <tr>
-                    <td>#{{ $order->id }}</td>
+                    <td>#{{ $order->id }}@if($order->source === 'cashier')<small class="d-block text-muted">كاشير</small>@endif</td>
                     <td>
                         <strong>{{ $order->customer_name }}</strong>
                         <small class="d-block text-muted">{{ $order->customer_email }}</small>
@@ -43,9 +44,19 @@
                         @if($order->notes)<small class="d-block text-muted">ملاحظات: {{ $order->notes }}</small>@endif
                     </td>
                     <td>{{ number_format($order->total, 2) }} {{ $order->currency }}</td>
-                    <td><span class="badge text-bg-light">{{ $order->status }}</span></td>
+                    <td><span class="badge bg-secondary">{{ $statuses[$order->status] ?? $order->status }}</span></td>
                     <td>
-                        @if($order->email_sent_at)
+                        @if($order->isPaid())
+                            <span class="badge bg-success">مدفوع</span>
+                            <small class="d-block text-muted">{{ config('modules.payment_methods.'.$order->payment_method, '') }}</small>
+                        @else
+                            <span class="badge bg-warning">غير مدفوع</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($order->source === 'cashier')
+                            <span class="text-muted">—</span>
+                        @elseif($order->email_sent_at)
                             <span class="badge bg-success">تم الإرسال</span>
                         @else
                             <span class="badge bg-warning text-dark">لم يرسل</span>
@@ -57,7 +68,7 @@
                             @csrf
                             @method('patch')
                             <select class="form-select form-select-sm mb-2" name="status">
-                                @foreach(['pending' => 'جديد', 'confirmed' => 'مؤكد', 'preparing' => 'قيد التحضير', 'completed' => 'مكتمل', 'cancelled' => 'ملغي'] as $value => $label)
+                                @foreach($statuses as $value => $label)
                                     <option value="{{ $value }}" @selected($order->status === $value)>{{ $label }}</option>
                                 @endforeach
                             </select>
@@ -66,7 +77,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="9" class="empty-state">لا توجد طلبات حتى الآن.</td></tr>
+                <tr><td colspan="10" class="empty-state">لا توجد طلبات حتى الآن.</td></tr>
             @endforelse
         </tbody>
     </table>

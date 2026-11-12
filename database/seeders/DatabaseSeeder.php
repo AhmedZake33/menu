@@ -19,6 +19,16 @@ class DatabaseSeeder extends Seeder
         DB::transaction(function () {
             User::updateOrCreate(['email' => 'admin@example.com'], ['name' => 'Super Admin', 'password' => 'password', 'role' => UserRole::SuperAdmin, 'restaurant_id' => null, 'is_active' => true]);
             $restaurant = Restaurant::updateOrCreate(['slug' => 'cafe-mocha'], ['name' => 'Cafe Mocha', 'description' => 'قهوة مختصة وطعام طازج', 'phone' => '01000000000', 'whatsapp' => '201000000000', 'currency' => 'EGP', 'is_active' => true]);
+            // The demo client gets every module, cashier included. Only on first seed, so
+            // re-seeding never overrides what the admin configured since.
+            if ($restaurant->wasRecentlyCreated) {
+                $restaurant->update([
+                    'ordering_enabled' => true,
+                    'tables_count' => 12,
+                    'modules' => array_fill_keys(array_keys(config('modules.list')), true),
+                    'settings' => ['cashier' => ['tax_percent' => 14, 'service_percent' => 12, 'allow_discount' => true, 'payment_methods' => ['cash', 'card', 'wallet'], 'receipt_footer' => 'شكرًا لزيارتكم']],
+                ]);
+            }
             User::updateOrCreate(['email' => 'restaurant@example.com'], ['name' => 'مدير كافيه موكا', 'password' => 'password', 'role' => UserRole::RestaurantAdmin, 'restaurant_id' => $restaurant->id, 'is_active' => true]);
             $pages = ['main-menu' => ['المنيو الرئيسية', '#7c3aed'], 'breakfast' => ['الإفطار', '#ea580c'], 'drinks' => ['المشروبات', '#0891b2']];
             foreach ($pages as $pi => $config) {

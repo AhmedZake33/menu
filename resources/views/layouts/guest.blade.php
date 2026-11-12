@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Digital Menu SaaS') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-brand-style />
 </head>
 <body class="auth-page">
     <main class="auth-shell">

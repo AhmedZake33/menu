@@ -25,6 +25,12 @@ class MenuPageController extends Controller
 
     public function store(StoreMenuPageRequest $request)
     {
+        $restaurant = $request->user()->restaurant;
+
+        if ($restaurant->reachedLimit('max_menu_pages', $restaurant->menuPages()->count())) {
+            return back()->withInput()->withErrors(['name' => 'وصلت للحد الأقصى لصفحات المنيو في اشتراكك ('.$restaurant->limit('max_menu_pages').').']);
+        }
+
         $this->service->create($request->user()->restaurant_id, $this->booleans($request->validated(), $request));
 
         return redirect()->route('dashboard.menu-pages.index')->with('success', 'تم إنشاء صفحة المنيو.');

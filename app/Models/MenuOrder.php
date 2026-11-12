@@ -16,6 +16,10 @@ class MenuOrder extends Model
         return [
             'subtotal' => 'decimal:2',
             'total' => 'decimal:2',
+            'discount' => 'decimal:2',
+            'service' => 'decimal:2',
+            'tax' => 'decimal:2',
+            'paid_at' => 'datetime',
             'email_sent_at' => 'datetime',
         ];
     }
@@ -23,6 +27,16 @@ class MenuOrder extends Model
     public function restaurant()
     {
         return $this->belongsTo(Restaurant::class);
+    }
+
+    public function cashier()
+    {
+        return $this->belongsTo(User::class, 'cashier_id');
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
     }
 
     public function items()

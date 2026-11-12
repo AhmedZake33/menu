@@ -16,6 +16,7 @@
     </a>
 </div>
 
+@if($restaurant->hasModule('qr'))
 <div class="card full-menu-qr-card p-3 p-lg-4 mb-4">
     <div class="row g-4 align-items-center">
         <div class="col-lg-8">
@@ -48,6 +49,7 @@
         </div>
     </div>
 </div>
+@endif
 
 <div class="row g-3">
     @forelse($pages as $page)
@@ -64,9 +66,15 @@
                 <code class="small">{{ $publicUrl }}</code>
                 <div class="d-flex flex-wrap gap-2 mt-3">
                     <a class="btn btn-sm btn-primary" href="{{ route('dashboard.menu-pages.edit', $page) }}">تعديل</a>
-                    <a class="btn btn-sm btn-outline-primary" href="{{ route('dashboard.theme.edit', $page) }}">التصميم</a>
-                    <a class="btn btn-sm btn-outline-dark" href="{{ route('dashboard.qr', [$page, 'svg']) }}" target="_blank">QR الصفحة</a>
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ $publicUrl }}" target="_blank">معاينة</a>
+                    @if($restaurant->hasModule('theme'))
+                        <a class="btn btn-sm btn-outline-primary" href="{{ route('dashboard.theme.edit', $page) }}">التصميم</a>
+                    @endif
+                    @if($restaurant->hasModule('qr'))
+                        <a class="btn btn-sm btn-outline-dark" href="{{ route('dashboard.qr', [$page, 'svg']) }}" target="_blank">QR الصفحة</a>
+                    @endif
+                    @if($restaurant->hasModule('public_menu'))
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ $publicUrl }}" target="_blank">معاينة</a>
+                    @endif
                 </div>
             </div>
         </div>

@@ -5,52 +5,91 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>@yield('title', 'Digital Menu SaaS')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-brand-style :color="auth()->user()->restaurant?->brandColor()" />
 </head>
-@php($isSuperAdmin = auth()->user()->isSuperAdmin())
-<body @if(! $isSuperAdmin && auth()->user()->restaurant_id) data-restaurant-channel="{{ auth()->user()->restaurant_id }}" @endif>
+@php
+    $user = auth()->user();
+    $isSuperAdmin = $user->isSuperAdmin();
+    $tenant = $isSuperAdmin ? null : $user->restaurant;
+    $homeUrl = $isSuperAdmin ? route('admin.dashboard') : route('dashboard.home');
 
-<nav class="navbar navbar-dark bg-dark sticky-top">
-    <div class="container-fluid">
-        <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-sm btn-outline-light d-lg-none panel-menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#panelSidebar" aria-controls="panelSidebar" aria-label="فتح القائمة">
-                <i class="bi bi-list"></i>
-            </button>
-            <a class="navbar-brand fw-bold" href="{{ $isSuperAdmin ? route('admin.dashboard') : route('dashboard.home') }}">Digital Menu</a>
-        </div>
-        <div class="d-flex align-items-center gap-3 text-white">
-            <span class="panel-user-name">{{ auth()->user()->name }}</span>
-            <form method="post" action="{{ route('logout') }}" data-no-ajax>
-                @csrf
-                <button class="btn btn-sm btn-outline-light">خروج</button>
-            </form>
-        </div>
-    </div>
-</nav>
+    // Sidebar entries for a client: [module, route, active patterns, label].
+    // An entry is rendered only when the client has that module.
+    $tenantNav = [
+        'المنيو' => [
+            ['menu_pages', 'dashboard.menu-pages.index', ['dashboard.menu-pages.*', 'dashboard.theme.*', 'dashboard.qr'], 'صفحات المنيو'],
+            ['categories', 'dashboard.categories.index', ['dashboard.categories.*'], 'التصنيفات'],
+            ['items', 'dashboard.items.index', ['dashboard.items.*'], 'الأصناف'],
+        ],
+        'المبيعات' => [
+            ['cashier', 'dashboard.cashier.index', ['dashboard.cashier.*'], 'الكاشير'],
+            ['orders', 'dashboard.orders.index', ['dashboard.orders.*'], 'طلبات العملاء'],
+            ['reservations', 'dashboard.reservations.index', ['dashboard.reservations.*'], 'الحجوزات'],
+        ],
+        'الإعدادات' => [
+            ['restaurant_settings', 'dashboard.restaurant-settings.edit', ['dashboard.restaurant-settings.*'], 'بيانات المطعم'],
+        ],
+    ];
+@endphp
+<body @if($tenant) data-restaurant-channel="{{ $user->restaurant_id }}" @endif>
 
-<div class="container-fluid">
-    <div class="row">
-        <aside id="panelSidebar" class="offcanvas-lg offcanvas-end col-lg-2 panel-sidebar p-0" tabindex="-1" aria-labelledby="panelSidebarLabel">
-            <div class="offcanvas-header d-lg-none">
-                <h5 class="offcanvas-title" id="panelSidebarLabel">القائمة</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#panelSidebar" aria-label="إغلاق"></button>
-            </div>
-            <nav class="panel-sidebar-nav p-3">
+<div class="app-shell">
+    <aside id="panelSidebar" class="offcanvas-lg offcanvas-end panel-sidebar" tabindex="-1" aria-labelledby="panelSidebarLabel">
+        <div class="offcanvas-header d-lg-none">
+            <h5 class="offcanvas-title" id="panelSidebarLabel">القائمة</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#panelSidebar" aria-label="إغلاق"></button>
+        </div>
+        <div class="panel-sidebar-inner">
+            <a class="panel-brand" href="{{ $homeUrl }}">
+                <span class="panel-brand-mark"><i class="bi bi-qr-code"></i></span>
+                <span>
+                    <strong>Digital Menu</strong>
+                    <small>{{ $tenant?->name ?? 'إدارة المنصة' }}</small>
+                </span>
+            </a>
+            <nav class="panel-sidebar-nav">
                 @if($isSuperAdmin)
                     <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> لوحة الإحصائيات</a>
-                    <a class="{{ request()->routeIs('admin.restaurants.*') ? 'active' : '' }}" href="{{ route('admin.restaurants.index') }}"><i class="bi bi-shop"></i> المطاعم</a>
+                    <a class="{{ request()->routeIs('admin.restaurants.*') ? 'active' : '' }}" href="{{ route('admin.restaurants.index') }}"><i class="bi bi-shop"></i> العملاء (المطاعم)</a>
                 @else
                     <a class="{{ request()->routeIs('dashboard.home') ? 'active' : '' }}" href="{{ route('dashboard.home') }}"><i class="bi bi-house"></i> الرئيسية</a>
-                    <a class="{{ request()->routeIs('dashboard.restaurant-settings.*') ? 'active' : '' }}" href="{{ route('dashboard.restaurant-settings.edit') }}"><i class="bi bi-building-gear"></i> بيانات المطعم</a>
-                    <a class="{{ request()->routeIs('dashboard.menu-pages.*', 'dashboard.theme.*', 'dashboard.qr') ? 'active' : '' }}" href="{{ route('dashboard.menu-pages.index') }}"><i class="bi bi-menu-button-wide"></i> صفحات المنيو</a>
-                    <a class="{{ request()->routeIs('dashboard.orders.*') ? 'active' : '' }}" href="{{ route('dashboard.orders.index') }}"><i class="bi bi-receipt-cutoff"></i> طلبات العملاء</a>
-                    <a class="{{ request()->routeIs('dashboard.categories.*') ? 'active' : '' }}" href="{{ route('dashboard.categories.index') }}"><i class="bi bi-tags"></i> التصنيفات</a>
-                    <a class="{{ request()->routeIs('dashboard.items.*') ? 'active' : '' }}" href="{{ route('dashboard.items.index') }}"><i class="bi bi-card-list"></i> الأصناف</a>
-                    <a href="{{ route('public.restaurant', auth()->user()->restaurant) }}" target="_blank"><i class="bi bi-eye"></i> عرض المنيو</a>
+                    @foreach($tenantNav as $groupTitle => $entries)
+                        @php($visible = array_filter($entries, fn ($entry) => $tenant->hasModule($entry[0])))
+                        @continue(! $visible)
+                        <div class="panel-nav-title">{{ $groupTitle }}</div>
+                        @foreach($visible as [$module, $routeName, $patterns, $label])
+                            <a class="{{ request()->routeIs(...$patterns) ? 'active' : '' }}" href="{{ route($routeName) }}"><i class="bi {{ config("modules.list.$module.icon") }}"></i> {{ $label }}</a>
+                        @endforeach
+                    @endforeach
                 @endif
             </nav>
-        </aside>
+            @if($tenant?->hasModule('public_menu'))
+                <div class="panel-sidebar-foot">
+                    <a class="btn btn-outline-primary w-100" href="{{ route('public.restaurant', $tenant) }}" target="_blank"><i class="bi bi-eye"></i> عرض المنيو</a>
+                </div>
+            @endif
+        </div>
+    </aside>
 
-        <main id="panelContent" class="col-12 col-lg-10 p-3 p-lg-4 panel-content-shell" data-panel-content>
+    <div class="panel-main">
+        <header class="panel-topbar">
+            <div class="d-flex align-items-center gap-2">
+                <button class="panel-menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#panelSidebar" aria-controls="panelSidebar" aria-label="فتح القائمة">
+                    <i class="bi bi-list"></i>
+                </button>
+                <a class="panel-topbar-brand" href="{{ $homeUrl }}">Digital Menu</a>
+            </div>
+            <div class="panel-user">
+                <span class="panel-user-avatar" aria-hidden="true">{{ mb_substr($user->name, 0, 1) }}</span>
+                <span class="panel-user-name">{{ $user->name }}</span>
+                <form method="post" action="{{ route('logout') }}" data-no-ajax>
+                    @csrf
+                    <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-box-arrow-left"></i> خروج</button>
+                </form>
+            </div>
+        </header>
+
+        <main id="panelContent" class="panel-content-shell" data-panel-content>
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
@@ -69,6 +108,7 @@
         </main>
     </div>
 </div>
+@if($tenant?->hasModule('orders'))
 <div class="order-live-toast" data-order-live-toast hidden>
     <div class="order-live-toast-icon"><i class="bi bi-bell-fill"></i></div>
     <div>
@@ -77,5 +117,6 @@
         <a href="{{ route('dashboard.orders.index') }}">عرض الطلبات</a>
     </div>
 </div>
+@endif
 </body>
 </html>

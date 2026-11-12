@@ -10,7 +10,7 @@ class PublicMenuController extends Controller
 {
     public function restaurant(Restaurant $restaurant)
     {
-        abort_unless($restaurant->isAvailable(), 404);
+        abort_unless($restaurant->isAvailable() && $restaurant->hasModule('public_menu'), 404);
 
         $menuPage = $restaurant->menuPages()
             ->where('is_active', true)
@@ -26,7 +26,7 @@ class PublicMenuController extends Controller
 
     public function menu(Restaurant $restaurant, MenuPage $menuPage)
     {
-        abort_unless($restaurant->isAvailable() && $menuPage->is_active && $menuPage->restaurant_id === $restaurant->id, 404);
+        abort_unless($restaurant->isAvailable() && $restaurant->hasModule('public_menu') && $menuPage->is_active && $menuPage->restaurant_id === $restaurant->id, 404);
 
         return $this->renderMenu($restaurant, $menuPage);
     }
