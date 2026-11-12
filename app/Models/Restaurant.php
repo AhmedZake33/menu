@@ -6,6 +6,7 @@ use App\Services\GooglePlaceService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Restaurant extends Model
 {
@@ -54,13 +55,29 @@ class Restaurant extends Model
             return (bool) $this->ordering_enabled;
         }
 
-        return (bool) (($this->modules ?? [])[$key] ?? $definition['default']);
+        $saved = $this->modules ?? [];
+
+        // "files" replaced the narrower "item_images"; honour a choice saved under the old name.
+        if ($key === 'files' && ! array_key_exists('files', $saved) && array_key_exists('item_images', $saved)) {
+            return (bool) $saved['item_images'];
+        }
+
+        return (bool) ($saved[$key] ?? $definition['default']);
     }
 
     /** @return array<string, bool> */
     public function moduleStates(): array
     {
         return collect(config('modules.list'))->map(fn ($definition, $key) => $this->hasModule($key))->all();
+    }
+
+    /**
+     * Public URL of an uploaded file, or null when there is none or this client's
+     * "files" module is off. Views show uploads only through this.
+     */
+    public function fileUrl(?string $path): ?string
+    {
+        return $path && $this->hasModule('files') ? Storage::url($path) : null;
     }
 
     /** Dashboard colour for this client; falls back to the system default. */

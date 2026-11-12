@@ -18,6 +18,7 @@
     @csrf
     @method('put')
 
+    @if($restaurant->hasModule('files'))
     <div class="card settings-card mb-4">
         <div class="card-body p-4">
             <h2 class="settings-section-title"><i class="bi bi-images"></i> الهوية البصرية</h2>
@@ -49,6 +50,8 @@
             </div>
         </div>
     </div>
+
+    @endif
 
     <div class="card settings-card mb-4">
         <div class="card-body p-4">

@@ -1,6 +1,7 @@
 @extends('layouts.panel')
 
 @section('content')
+@php($canFiles = auth()->user()->restaurant->hasModule('files'))
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
     <div>
         <span class="eyebrow text-primary">تنظيم المنيو</span>
@@ -36,10 +37,12 @@
                     @endforeach
                 </select>
             </div>
+            @if($canFiles)
             <div class="col-lg-3">
                 <label class="form-label">الصورة</label>
                 <input class="form-control" type="file" name="image" accept="image/*">
             </div>
+            @endif
             <div class="col-lg-9">
                 <label class="form-label">الوصف</label>
                 <input class="form-control" name="description" placeholder="وصف قصير للتصنيف">
@@ -66,7 +69,7 @@
         <div class="col-md-6 col-xl-4">
             <div class="card category-card h-100">
                 <div class="category-cover">
-                    @if($category->image)
+                    @if($canFiles && $category->image)
                         <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}">
                     @else
                         <div><i class="bi bi-tags"></i></div>
@@ -114,10 +117,11 @@
                         </div>
                         <div class="modal-body">
                             <div class="row g-3">
+                                @if($canFiles)
                                 <div class="col-md-5">
                                     <label class="form-label">الصورة</label>
                                     <div class="item-image-editor">
-                                        @if($category->image)
+                                        @if($canFiles && $category->image)
                                             <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}">
                                         @else
                                             <div><i class="bi bi-image"></i><span>لا توجد صورة</span></div>
@@ -125,7 +129,8 @@
                                     </div>
                                     <input class="form-control mt-2" type="file" name="image" accept="image/*">
                                 </div>
-                                <div class="col-md-7">
+                                @endif
+                                <div class="{{ $canFiles ? 'col-md-7' : 'col-12' }}">
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label">اسم التصنيف</label>

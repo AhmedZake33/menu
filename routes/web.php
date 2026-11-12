@@ -36,7 +36,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::resource('restaurants', RestaurantController::class)->except('show');
     });
 
-    Route::prefix('dashboard')->name('dashboard.')->middleware(['role:restaurant_admin', 'restaurant.active'])->group(function () {
+    Route::prefix('dashboard')->name('dashboard.')->middleware(['role:restaurant_admin', 'restaurant.active', 'uploads.allowed'])->group(function () {
         Route::get('/', [DashboardController::class, 'restaurant'])->name('home');
         Route::middleware('module:restaurant_settings')->group(function () {
             Route::get('restaurant-settings', [RestaurantSettingsController::class, 'edit'])->name('restaurant-settings.edit');

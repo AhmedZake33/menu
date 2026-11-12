@@ -190,25 +190,41 @@ test('client edits its cashier settings but cannot grant itself discounts', func
     expect($settings['tax_percent'])->toBe(14.0)->and($settings['allow_discount'])->toBeFalse();
 });
 
-test('item images are ignored hidden and kept when the client does not have the module', function () {
+test('a client without the files module cannot upload anything and its stored files are hidden but kept', function () {
     Storage::fake('public');
-    [$restaurant, $admin, $item, $page] = clientWith(['modules' => ['item_images' => false]]);
+    [$restaurant, $admin, $item] = clientWith(['modules' => ['files' => false], 'logo' => 'restaurants/logo.png']);
     $item->update(['image' => 'items/old.jpg']);
+    $item->category->update(['image' => 'categories/old.jpg']);
     $file = fn () => UploadedFile::fake()->image('a.jpg');
 
-    $this->actingAs($admin)->get(route('dashboard.items.index'))->assertOk()->assertDontSee('name="image"', false)->assertDontSee('items/old.jpg');
+    foreach (['dashboard.items.index', 'dashboard.categories.index', 'dashboard.restaurant-settings.edit'] as $page) {
+        $this->actingAs($admin)->get(route($page))->assertOk()->assertDontSee('type="file"', false)->assertDontSee('old.jpg')->assertDontSee('logo.png');
+    }
 
-    $this->actingAs($admin)->post(route('dashboard.items.store'), ['category_id' => $item->category_id, 'name' => 'New', 'price' => 10, 'image' => $file()])->assertSessionHasNoErrors();
-    expect(Item::where('name', 'New')->sole()->image)->toBeNull();
-
-    $this->actingAs($admin)->put(route('dashboard.items.update', $item), ['category_id' => $item->category_id, 'name' => 'Latte', 'price' => 55, 'is_active' => 1, 'is_available' => 1, 'image' => $file()])->assertSessionHasNoErrors();
-    expect($item->fresh()->image)->toBe('items/old.jpg');
-
+    $this->actingAs($admin)->post(route('dashboard.items.store'), ['category_id' => $item->category_id, 'name' => 'New', 'price' => 10, 'image' => $file()])->assertForbidden();
+    $this->actingAs($admin)->put(route('dashboard.items.update', $item), ['category_id' => $item->category_id, 'name' => 'Latte', 'price' => 55, 'image' => $file()])->assertForbidden();
+    $this->actingAs($admin)->put(route('dashboard.categories.update', $item->category), ['menu_page_id' => $item->menu_page_id, 'name' => 'Hot', 'image' => $file()])->assertForbidden();
+    $this->actingAs($admin)->put(route('dashboard.restaurant-settings.update'), ['name' => $restaurant->name, 'logo' => $file(), 'cover_image' => $file()])->assertForbidden();
     $this->actingAs($admin)->delete(route('dashboard.items.image.destroy', $item))->assertNotFound();
-    $this->get(route('public.restaurant', $restaurant))->assertOk()->assertDontSee('items/old.jpg');
 
-    $restaurant->update(['modules' => ['item_images' => true]]);
-    $this->get(route('public.restaurant', $restaurant))->assertOk()->assertSee('items/old.jpg');
+    expect(Item::where('name', 'New')->exists())->toBeFalse()
+        ->and($item->fresh()->image)->toBe('items/old.jpg')
+        ->and($restaurant->fresh()->logo)->toBe('restaurants/logo.png')
+        ->and(Storage::disk('public')->allFiles())->toBe([]);
+
+    // Without a file the same forms still work.
+    $this->actingAs($admin)->put(route('dashboard.items.update', $item), ['category_id' => $item->category_id, 'name' => 'Latte', 'price' => 55, 'is_active' => 1, 'is_available' => 1])->assertSessionHasNoErrors();
+
+    $this->get(route('public.restaurant', $restaurant))->assertOk()->assertDontSee('old.jpg')->assertDontSee('logo.png');
+
+    $restaurant->update(['modules' => ['files' => true]]);
+    $this->get(route('public.restaurant', $restaurant))->assertOk()->assertSee('items/old.jpg')->assertSee('categories/old.jpg')->assertSee('logo.png');
+});
+
+test('a choice saved under the old item images name still switches files off', function () {
+    [$restaurant] = clientWith(['modules' => ['item_images' => false]]);
+
+    expect($restaurant->hasModule('files'))->toBeFalse();
 });
 
 test('online reservations exist only for clients that have the module', function () {

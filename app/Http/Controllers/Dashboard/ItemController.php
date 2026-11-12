@@ -34,8 +34,7 @@ class ItemController extends Controller
 
         $data = $request->validated();
         $category = Category::where('restaurant_id', $request->user()->restaurant_id)->findOrFail($data['category_id']);
-        // Item images are a per-client module: without it an uploaded file is ignored.
-        $data['image'] = $restaurant->hasModule('item_images') ? $this->images->replace($request->file('image'), null, 'items') : null;
+        $data['image'] = $this->images->replace($request->file('image'), null, 'items');
 
         Item::create([
             ...$data,
@@ -63,12 +62,7 @@ class ItemController extends Controller
         ]);
 
         $category = Category::where('restaurant_id', $restaurantId)->findOrFail($data['category_id']);
-        if ($request->user()->restaurant->hasModule('item_images')) {
-            $data['image'] = $this->images->replace($request->file('image'), $item->image, 'items');
-        } else {
-            // Keep whatever is stored so the pictures come back if the module is re-enabled.
-            unset($data['image']);
-        }
+        $data['image'] = $this->images->replace($request->file('image'), $item->image, 'items');
 
         $item->update([
             ...$data,
@@ -82,7 +76,7 @@ class ItemController extends Controller
     public function destroyImage(Item $item)
     {
         $this->authorize('update', $item);
-        abort_unless(request()->user()->restaurant->hasModule('item_images'), 404);
+        abort_unless(request()->user()->restaurant->hasModule('files'), 404);
 
         $this->images->delete($item->image);
         $item->update(['image' => null]);

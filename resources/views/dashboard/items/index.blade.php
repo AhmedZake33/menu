@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('content')
-@php($canImages = auth()->user()->restaurant->hasModule('item_images'))
+@php($canImages = auth()->user()->restaurant->hasModule('files'))
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
     <div>
         <span class="eyebrow text-primary">إدارة المنيو</span>

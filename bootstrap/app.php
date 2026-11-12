@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\BlockUploadsWithoutFilesModule;
 use App\Http\Middleware\EnsureModuleEnabled;
 use App\Http\Middleware\EnsureRestaurantIsActive;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'restaurant.active' => EnsureRestaurantIsActive::class,
             'role' => RequireRole::class,
             'module' => EnsureModuleEnabled::class,
+            'uploads.allowed' => BlockUploadsWithoutFilesModule::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

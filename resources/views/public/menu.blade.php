@@ -29,7 +29,7 @@
 
 <header class="menu-hero">
     <div class="container public-menu-container py-5">
-        @if($restaurant->logo)
+        @if($restaurant->fileUrl($restaurant->logo))
             <img class="restaurant-logo" src="{{ Storage::url($restaurant->logo) }}" alt="{{ $restaurant->name }}">
         @endif
         <h1>{{ $restaurant->name }}</h1>
@@ -68,7 +68,7 @@
         </div>
     @endif
 
-    @php($showItemImages = $menuPage->theme->show_item_images && $restaurant->hasModule('item_images'))
+    @php($showItemImages = $menuPage->theme->show_item_images && $restaurant->hasModule('files'))
 
     @if($restaurant->hasModule('reservations'))
         <div class="text-center mb-4">
@@ -170,7 +170,7 @@
     @foreach($menuPage->categories as $category)
         <section id="category-{{ $category->id }}" class="mb-5">
             <div class="public-category-heading">
-                @if($menuPage->theme->show_category_images && $category->image)
+                @if($menuPage->theme->show_category_images && $restaurant->fileUrl($category->image))
                     <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}">
                 @endif
                 <div>
