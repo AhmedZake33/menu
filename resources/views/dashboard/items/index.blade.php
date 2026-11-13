@@ -20,11 +20,11 @@
     <form method="post" enctype="multipart/form-data" action="{{ route('dashboard.items.store') }}">
         @csrf
         <div class="row g-3">
-            <div class="col-lg-4">
+            <div class="col-lg-3">
                 <label class="form-label">اسم الصنف</label>
                 <input class="form-control" name="name" required placeholder="مثال: لاتيه مثلج">
             </div>
-            <div class="col-lg-4">
+            <div class="col-lg-3">
                 <label class="form-label">التصنيف</label>
                 <select class="form-select" name="category_id" required>
                     <option value="">اختر التصنيف</option>
@@ -34,8 +34,12 @@
                 </select>
             </div>
             <div class="col-lg-2 col-md-6">
-                <label class="form-label">السعر</label>
+                <label class="form-label">سعر البيع</label>
                 <input class="form-control" type="number" step=".01" min="0" name="price" required placeholder="0.00">
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">السعر الأصلي قبل الخصم</label>
+                <input class="form-control" type="number" step=".01" min="0" name="old_price" placeholder="اختياري">
             </div>
             <div class="col-lg-2 col-md-6">
                 <label class="form-label">الترتيب</label>
@@ -114,10 +118,7 @@
                         </td>
                         <td>{{ $item->category->name }}</td>
                         <td>
-                            {{ number_format($item->price, 2) }} {{ auth()->user()->restaurant->currency }}
-                            @if($item->old_price)
-                                <small class="d-block text-muted text-decoration-line-through">{{ number_format($item->old_price, 2) }}</small>
-                            @endif
+                            <x-item-price :pricing="$prices[$item->id]" :currency="auth()->user()->restaurant->currency" />
                         </td>
                         <td>
                             <span class="badge {{ $item->is_available ? 'text-bg-success' : 'text-bg-secondary' }}">
@@ -206,12 +207,13 @@
                                                         </select>
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <label class="form-label">السعر</label>
+                                                        <label class="form-label">سعر البيع</label>
                                                         <input class="form-control" type="number" step=".01" min="0" name="price" required value="{{ old('price', $item->price) }}">
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <label class="form-label">السعر القديم</label>
+                                                        <label class="form-label">السعر الأصلي قبل الخصم</label>
                                                         <input class="form-control" type="number" step=".01" min="0" name="old_price" value="{{ old('old_price', $item->old_price) }}">
+                                                        <small class="text-muted">مثال: الأصلي 100 وسعر البيع 80 لخصم 20%. لإلغاء الخصم، أعد سعر البيع للأصلي وأفرغ هذا الحقل.</small>
                                                     </div>
                                                     <div class="col-12">
                                                         <label class="form-label">وصف مختصر</label>

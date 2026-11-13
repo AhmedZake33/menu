@@ -9,6 +9,12 @@
 
 return [
     'list' => [
+        'offers' => [
+            'label' => 'الخصومات والعروض',
+            'description' => 'عروض عامة على أسعار الأصناف مع تحديد مدة العرض.',
+            'icon' => 'bi-tags-fill',
+            'default' => true,
+        ],
         'restaurant_settings' => [
             'label' => 'بيانات المطعم',
             'description' => 'الاسم والشعار وبيانات التواصل والموقع.',

@@ -11,7 +11,12 @@
         <h1>{{ $restaurant->exists ? $restaurant->name : 'عميل جديد' }}</h1>
         <p>{{ $restaurant->exists ? 'كل ما يراه هذا العميل في لوحته يُحدَّد من هنا.' : 'أنشئ المطعم وحساب مديره واختر ما يظهر له.' }}</p>
     </div>
-    <a class="btn btn-outline-secondary" href="{{ route('admin.restaurants.index') }}"><i class="bi bi-arrow-right"></i> كل العملاء</a>
+    <div class="d-flex flex-wrap gap-2">
+        @if($restaurant->exists)
+            <a class="btn btn-outline-primary" href="{{ route('admin.restaurants.show', $restaurant) }}"><i class="bi bi-eye"></i> كل بيانات المطعم</a>
+        @endif
+        <a class="btn btn-outline-secondary" href="{{ route('admin.restaurants.index') }}"><i class="bi bi-arrow-right"></i> كل العملاء</a>
+    </div>
 </div>
 
 <form method="post" action="{{ $restaurant->exists ? route('admin.restaurants.update', $restaurant) : route('admin.restaurants.store') }}">

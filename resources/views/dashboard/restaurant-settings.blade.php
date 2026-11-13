@@ -9,9 +9,12 @@
         <h1>بيانات المطعم أو الكافيه</h1>
         <p class="text-muted">هذه البيانات تظهر للعملاء في المنيو الإلكتروني.</p>
     </div>
-    <a class="btn btn-outline-primary" href="{{ route('public.restaurant', $restaurant) }}" target="_blank">
-        <i class="bi bi-box-arrow-up-left"></i> معاينة المنيو
-    </a>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary" href="{{ route('dashboard.restaurant-settings.show') }}"><i class="bi bi-eye"></i> كل بيانات المطعم</a>
+        <a class="btn btn-outline-primary" href="{{ route('public.restaurant', $restaurant) }}" target="_blank">
+            <i class="bi bi-box-arrow-up-left"></i> معاينة المنيو
+        </a>
+    </div>
 </div>
 
 <form method="post" enctype="multipart/form-data" action="{{ route('dashboard.restaurant-settings.update') }}">

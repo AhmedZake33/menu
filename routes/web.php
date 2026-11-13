@@ -7,6 +7,7 @@ use App\Http\Controllers\Dashboard\CategoryController;
 use App\Http\Controllers\Dashboard\ItemController;
 use App\Http\Controllers\Dashboard\MenuOrderController;
 use App\Http\Controllers\Dashboard\MenuPageController;
+use App\Http\Controllers\Dashboard\OfferController;
 use App\Http\Controllers\Dashboard\QrCodeController;
 use App\Http\Controllers\Dashboard\ReservationController;
 use App\Http\Controllers\Dashboard\RestaurantSettingsController;
@@ -33,12 +34,14 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     Route::prefix('admin')->name('admin.')->middleware('role:super_admin')->group(function () {
         Route::get('/', [DashboardController::class, 'super'])->name('dashboard');
-        Route::resource('restaurants', RestaurantController::class)->except('show');
+        Route::resource('restaurants', RestaurantController::class);
     });
 
     Route::prefix('dashboard')->name('dashboard.')->middleware(['role:restaurant_admin', 'restaurant.active', 'uploads.allowed'])->group(function () {
         Route::get('/', [DashboardController::class, 'restaurant'])->name('home');
+        Route::resource('offers', OfferController::class)->except('show')->middleware('module:offers');
         Route::middleware('module:restaurant_settings')->group(function () {
+            Route::get('restaurant-settings/details', [RestaurantSettingsController::class, 'show'])->name('restaurant-settings.show');
             Route::get('restaurant-settings', [RestaurantSettingsController::class, 'edit'])->name('restaurant-settings.edit');
             Route::put('restaurant-settings', [RestaurantSettingsController::class, 'update'])->name('restaurant-settings.update');
         });

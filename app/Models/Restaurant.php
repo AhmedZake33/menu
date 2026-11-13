@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use App\Services\GooglePlaceService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -188,6 +189,11 @@ class Restaurant extends Model
         return $this->hasMany(User::class);
     }
 
+    public function administrators()
+    {
+        return $this->users()->where('role', UserRole::RestaurantAdmin->value)->orderBy('id');
+    }
+
     public function menuPages()
     {
         return $this->hasMany(MenuPage::class);
@@ -216,5 +222,10 @@ class Restaurant extends Model
     public function orders()
     {
         return $this->hasMany(MenuOrder::class);
+    }
+
+    public function offers()
+    {
+        return $this->hasMany(Offer::class);
     }
 }

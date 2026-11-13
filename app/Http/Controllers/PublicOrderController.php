@@ -9,6 +9,7 @@ use App\Models\Item;
 use App\Models\MenuOrder;
 use App\Models\PendingMenuOrder;
 use App\Models\Restaurant;
+use App\Services\MenuPricingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,9 +22,13 @@ use Illuminate\Validation\ValidationException;
 
 class PublicOrderController extends Controller
 {
+    public function __construct(private MenuPricingService $pricing) {}
+
     public function sendCode(Request $request, Restaurant $restaurant): RedirectResponse|JsonResponse
     {
         [$data, $requested, $menuItems] = $this->validatedOrderData($request, $restaurant);
+        $unitPrices = collect($this->pricing->prices($restaurant, $menuItems))
+            ->map(fn ($pricing) => (int) round($pricing['price'] * 100))->all();
 
         $code = (string) random_int(100000, 999999);
         $pending = PendingMenuOrder::create([
@@ -34,6 +39,7 @@ class PublicOrderController extends Controller
             'payload' => [
                 'data' => $data,
                 'items' => $requested->all(),
+                'unit_prices' => $unitPrices,
             ],
             'expires_at' => now()->addMinutes(10),
         ]);
@@ -56,6 +62,7 @@ class PublicOrderController extends Controller
             return response()->json([
                 'message' => 'تم إرسال كود التأكيد إلى '.$pending->email.'.',
                 'token' => $pending->token,
+                'prices' => array_map(fn ($cents) => $cents / 100, $unitPrices),
             ]);
         }
 
@@ -94,7 +101,23 @@ class PublicOrderController extends Controller
             throw ValidationException::withMessages(['items' => 'بعض الأصناف لم تعد متاحة حاليًا. اطلب كود جديد بعد تعديل الطلب.']);
         }
 
-        $order = $this->createOrder($restaurant, $data, $requested, $menuItems);
+        $prices = $this->pricing->prices($restaurant, $menuItems);
+        foreach ($payload['unit_prices'] ?? [] as $id => $cents) {
+            if ((int) round($prices[$id]['price'] * 100) !== (int) $cents) {
+                $pending->delete();
+                $message = 'أسعار بعض الأصناف أو العروض اتغيرت. راجع الإجمالي الجديد واطلب كود جديد.';
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => $message,
+                        'code' => 'prices_changed',
+                        'prices' => array_map(fn ($pricing) => $pricing['price'], $prices),
+                    ], 409);
+                }
+                throw ValidationException::withMessages(['verification_code' => $message]);
+            }
+        }
+
+        $order = $this->createOrder($restaurant, $data, $requested, $menuItems, $prices);
         $pending->delete();
 
         try {
@@ -166,10 +189,10 @@ class PublicOrderController extends Controller
             ->keyBy('id');
     }
 
-    private function createOrder(Restaurant $restaurant, array $data, $requested, $menuItems): MenuOrder
+    private function createOrder(Restaurant $restaurant, array $data, $requested, $menuItems, array $prices): MenuOrder
     {
-        return DB::transaction(function () use ($restaurant, $data, $requested, $menuItems) {
-            $subtotal = $menuItems->sum(fn (Item $item) => (float) $item->price * $requested[$item->id]);
+        return DB::transaction(function () use ($restaurant, $data, $requested, $menuItems, $prices) {
+            $subtotal = round($menuItems->sum(fn (Item $item) => $prices[$item->id]['price'] * $requested[$item->id]), 2);
 
             $order = MenuOrder::create([
                 'restaurant_id' => $restaurant->id,
@@ -186,14 +209,14 @@ class PublicOrderController extends Controller
 
             foreach ($menuItems as $item) {
                 $quantity = $requested[$item->id];
-                $unitPrice = (float) $item->price;
+                $unitPrice = $prices[$item->id]['price'];
 
                 $order->items()->create([
                     'item_id' => $item->id,
                     'item_name' => $item->name,
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
-                    'line_total' => $unitPrice * $quantity,
+                    'line_total' => round($unitPrice * $quantity, 2),
                 ]);
             }
 

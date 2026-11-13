@@ -26,6 +26,13 @@ class RestaurantController extends Controller
         return view('admin.restaurants.form', ['restaurant' => new Restaurant]);
     }
 
+    public function show(Restaurant $restaurant)
+    {
+        $restaurant->load('administrators:id,restaurant_id,name,email,is_active');
+
+        return view('restaurants.show', compact('restaurant'));
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate(['name' => 'required|max:150', 'slug' => 'required|alpha_dash|unique:restaurants', 'email' => 'nullable|email', 'expires_at' => 'nullable|date', 'ordering_enabled' => 'nullable|boolean', 'admin_name' => 'required|max:150', 'admin_email' => 'required|email|unique:users,email', 'password' => 'required|min:8', ...$this->clientRules()]);

@@ -22,12 +22,14 @@
             ['items', 'dashboard.items.index', ['dashboard.items.*'], 'الأصناف'],
         ],
         'المبيعات' => [
+            ['offers', 'dashboard.offers.index', ['dashboard.offers.*'], 'الخصومات والعروض'],
             ['cashier', 'dashboard.cashier.index', ['dashboard.cashier.*'], 'الكاشير'],
             ['orders', 'dashboard.orders.index', ['dashboard.orders.*'], 'طلبات العملاء'],
             ['reservations', 'dashboard.reservations.index', ['dashboard.reservations.*'], 'الحجوزات'],
         ],
         'الإعدادات' => [
-            ['restaurant_settings', 'dashboard.restaurant-settings.edit', ['dashboard.restaurant-settings.*'], 'بيانات المطعم'],
+            ['restaurant_settings', 'dashboard.restaurant-settings.show', ['dashboard.restaurant-settings.show'], 'تفاصيل المطعم'],
+            ['restaurant_settings', 'dashboard.restaurant-settings.edit', ['dashboard.restaurant-settings.edit', 'dashboard.restaurant-settings.update'], 'بيانات المطعم'],
         ],
     ];
 @endphp

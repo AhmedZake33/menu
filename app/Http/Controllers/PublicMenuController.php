@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\MenuPage;
 use App\Models\MenuView;
 use App\Models\Restaurant;
+use App\Services\MenuPricingService;
 
 class PublicMenuController extends Controller
 {
+    public function __construct(private MenuPricingService $pricing) {}
+
     public function restaurant(Restaurant $restaurant)
     {
         abort_unless($restaurant->isAvailable() && $restaurant->hasModule('public_menu'), 404);
@@ -52,6 +55,9 @@ class PublicMenuController extends Controller
 
         MenuView::create(['restaurant_id' => $restaurant->id, 'menu_page_id' => $menuPage->id, 'ip_address' => request()->ip(), 'user_agent' => request()->userAgent(), 'referrer' => request()->headers->get('referer'), 'viewed_at' => now()]);
 
-        return view('public.menu', compact('restaurant', 'menuPage', 'menuPages', 'mapEmbedUrl', 'mapDirectionsUrl'));
+        $offers = $this->pricing->activeOffers($restaurant);
+        $prices = $this->pricing->prices($restaurant, $menuPage->categories->flatMap->items, $offers);
+
+        return view('public.menu', compact('restaurant', 'menuPage', 'menuPages', 'mapEmbedUrl', 'mapDirectionsUrl', 'offers', 'prices'));
     }
 }

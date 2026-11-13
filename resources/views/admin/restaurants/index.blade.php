@@ -39,7 +39,12 @@
                 <td>{{ $r->menu_pages_count }}</td>
                 <td>{{ $r->items_count }}</td>
                 <td>{{ $r->menu_views_count }}</td>
-                <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ route('admin.restaurants.edit', $r) }}"><i class="bi bi-sliders"></i> الإعدادات</a></td>
+                <td class="text-end">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.restaurants.show', $r) }}"><i class="bi bi-eye"></i> التفاصيل</a>
+                        <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.restaurants.edit', $r) }}"><i class="bi bi-sliders"></i> الإعدادات</a>
+                    </div>
+                </td>
             </tr>
         @empty
             <tr><td colspan="7" class="empty-state">لا توجد مطاعم. أضف أول عميل.</td></tr>

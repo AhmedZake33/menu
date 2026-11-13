@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\MenuOrder;
+use App\Services\MenuPricingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -16,6 +17,8 @@ use Illuminate\View\View;
 
 class CashierController extends Controller
 {
+    public function __construct(private MenuPricingService $pricing) {}
+
     public function index(Request $request): View
     {
         $restaurant = $request->user()->restaurant;
@@ -42,6 +45,7 @@ class CashierController extends Controller
         return view('dashboard.cashier.index', [
             'restaurant' => $restaurant,
             'categories' => $categories,
+            'prices' => $this->pricing->prices($restaurant, $categories->flatMap->items),
             'unpaidOrders' => $unpaidOrders,
             'cashier' => $restaurant->cashierSettings(),
             'paymentMethods' => $restaurant->paymentMethods(),
@@ -88,7 +92,8 @@ class CashierController extends Controller
         }
 
         // Prices always come from the database, never from the browser.
-        $subtotal = round($items->sum(fn (Item $item) => (float) $item->price * $requested[$item->id]), 2);
+        $prices = $this->pricing->prices($restaurant, $items);
+        $subtotal = round($items->sum(fn (Item $item) => $prices[$item->id]['price'] * $requested[$item->id]), 2);
         $discount = $cashier['allow_discount'] ? round((float) ($data['discount'] ?? 0), 2) : 0.0;
 
         if ($discount > $subtotal) {
@@ -97,7 +102,7 @@ class CashierController extends Controller
 
         $totals = $restaurant->cashierTotals($subtotal, $discount);
 
-        $order = DB::transaction(function () use ($restaurant, $request, $data, $items, $requested, $totals) {
+        $order = DB::transaction(function () use ($restaurant, $request, $data, $items, $requested, $totals, $prices) {
             $order = MenuOrder::create([
                 'restaurant_id' => $restaurant->id,
                 'source' => 'cashier',
@@ -121,8 +126,8 @@ class CashierController extends Controller
                     'item_id' => $item->id,
                     'item_name' => $item->name,
                     'quantity' => $requested[$item->id],
-                    'unit_price' => $item->price,
-                    'line_total' => round((float) $item->price * $requested[$item->id], 2),
+                    'unit_price' => $prices[$item->id]['price'],
+                    'line_total' => round($prices[$item->id]['price'] * $requested[$item->id], 2),
                 ]);
             }
 

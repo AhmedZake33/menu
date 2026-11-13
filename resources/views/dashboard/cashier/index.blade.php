@@ -71,9 +71,13 @@
         <div class="pos-grid">
             @foreach($categories as $category)
                 @foreach($category->items as $item)
-                    <button type="button" class="pos-item" data-pos-item data-id="{{ $item->id }}" data-name="{{ $item->name }}" data-price="{{ $item->price }}" data-cat="{{ $category->id }}">
+                    <button type="button" class="pos-item" data-pos-item data-id="{{ $item->id }}" data-name="{{ $item->name }}" data-price="{{ number_format($prices[$item->id]['price'], 2, '.', '') }}" data-cat="{{ $category->id }}">
                         <strong>{{ $item->name }}</strong>
-                        <span>{{ $money($item->price) }}</span>
+                        <span>{{ $money($prices[$item->id]['price']) }}</span>
+                        @if($prices[$item->id]['original_price'] > $prices[$item->id]['price'])
+                            <del class="small text-muted">{{ $money($prices[$item->id]['original_price']) }}</del>
+                            <small class="text-success">{{ $prices[$item->id]['offer_title'] ?? 'خصم على الصنف' }}</small>
+                        @endif
                     </button>
                 @endforeach
             @endforeach

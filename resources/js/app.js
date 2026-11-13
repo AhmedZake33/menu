@@ -275,6 +275,12 @@ const initPublicOrdering = (root = document) => {
     let verificationRequested = false;
 
     const money = value => Number(value || 0).toFixed(2);
+    const syncPrices = prices => {
+        Object.entries(prices ?? {}).forEach(([id, price]) => {
+            const item = cart.get(String(id));
+            if (item && Number.isFinite(Number(price))) item.price = Number(price);
+        });
+    };
     const setStatus = (message, type = 'info') => {
         if (!statusBox) {
             return;
@@ -428,11 +434,18 @@ const initPublicOrdering = (root = document) => {
             const data = await response.json().catch(() => ({}));
 
             if (!response.ok) {
+                if (data.code === 'prices_changed') {
+                    resetVerification();
+                    syncPrices(data.prices);
+                    render();
+                }
                 const errors = data.errors ? Object.values(data.errors).flat() : [];
                 throw new Error(errors[0] ?? data.message ?? 'حدث خطأ، حاول مرة أخرى.');
             }
 
             if (!verificationRequested) {
+                // Refresh the displayed cart with the server's current offers before confirmation.
+                syncPrices(data.prices);
                 verificationRequested = true;
                 tokenInput.value = data.token;
                 detailsStep?.classList.add('d-none');

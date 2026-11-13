@@ -167,6 +167,21 @@
         </nav>
     @endif
 
+    @if($offers->isNotEmpty())
+        <section class="card p-3 mb-4" aria-label="العروض الحالية">
+            <h2 class="h5"><i class="bi bi-tags-fill"></i> العروض الحالية</h2>
+            @foreach($offers as $offer)
+                <div class="{{ $loop->first ? '' : 'border-top pt-2 mt-2' }}">
+                    <strong class="text-break">{{ $offer->title }}</strong>
+                    <span class="badge text-bg-success">خصم {{ number_format($offer->discount_value, 2) }} {{ $offer->discount_type === 'percent' ? '%' : $restaurant->currency }} على كل صنف</span>
+                    @if($offer->description)<p class="mb-0 text-break">{{ $offer->description }}</p>@endif
+                    @if($offer->ends_at)<small class="text-muted">حتى {{ $offer->ends_at->format('Y/m/d h:i A') }}</small>@endif
+                </div>
+            @endforeach
+            <small class="text-muted mt-2">الأسعار المعروضة تشمل أفضل خصم متاح، ولا تُجمع العروض مع خصم الصنف أو مع بعضها.</small>
+        </section>
+    @endif
+
     @foreach($menuPage->categories as $category)
         <section id="category-{{ $category->id }}" class="mb-5">
             <div class="public-category-heading">
@@ -192,7 +207,7 @@
                                 <div class="menu-item-heading">
                                     <h3 class="h5">{{ $item->name }} @if($item->is_new)<span class="badge text-bg-success">جديد</span>@endif</h3>
                                     @if($menuPage->theme->show_prices)
-                                        <strong class="price">{{ number_format($item->price, 2) }} {{ $restaurant->currency }}</strong>
+                                        <x-item-price :pricing="$prices[$item->id]" :currency="$restaurant->currency" />
                                     @endif
                                 </div>
                                 @if($menuPage->theme->show_descriptions)
@@ -208,7 +223,7 @@
                                         data-order-add
                                         data-id="{{ $item->id }}"
                                         data-name="{{ $item->name }}"
-                                        data-price="{{ $item->price }}"
+                                        data-price="{{ number_format($prices[$item->id]['price'], 2, '.', '') }}"
                                     >
                                         <i class="bi bi-plus-circle"></i> أضف للطلب
                                     </button>
@@ -233,7 +248,7 @@
                                             <span class="badge text-bg-light">{{ $category->name }}</span>
                                             <h3>{{ $item->name }}</h3>
                                             @if($menuPage->theme->show_prices)
-                                                <strong class="price">{{ number_format($item->price, 2) }} {{ $restaurant->currency }}</strong>
+                                                <x-item-price :pricing="$prices[$item->id]" :currency="$restaurant->currency" />
                                             @endif
                                             @if($menuPage->theme->show_descriptions && $item->short_description)
                                                 <p>{{ $item->short_description }}</p>

@@ -7,19 +7,22 @@ use App\Http\Requests\StoreItemRequest;
 use App\Models\Category;
 use App\Models\Item;
 use App\Services\ImageService;
+use App\Services\MenuPricingService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class ItemController extends Controller
 {
-    public function __construct(private ImageService $images) {}
+    public function __construct(private ImageService $images, private MenuPricingService $pricing) {}
 
     public function index()
     {
         $restaurant = request()->user()->restaurant;
+        $items = $restaurant->items()->with(['category', 'menuPage'])->orderBy('sort_order')->paginate(20);
 
         return view('dashboard.items.index', [
-            'items' => $restaurant->items()->with(['category', 'menuPage'])->orderBy('sort_order')->paginate(20),
+            'items' => $items,
+            'prices' => $this->pricing->prices($restaurant, $items),
             'categories' => $restaurant->categories()->with('menuPage')->get(),
         ]);
     }

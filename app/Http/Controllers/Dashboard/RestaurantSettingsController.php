@@ -15,6 +15,14 @@ class RestaurantSettingsController extends Controller
 {
     public function __construct(private ImageService $images, private GooglePlaceService $googlePlaces) {}
 
+    public function show(): View
+    {
+        $restaurant = request()->user()->restaurant;
+        $restaurant->load('administrators:id,restaurant_id,name,email,is_active');
+
+        return view('restaurants.show', compact('restaurant'));
+    }
+
     public function edit(): View
     {
         $restaurant = request()->user()->restaurant;
