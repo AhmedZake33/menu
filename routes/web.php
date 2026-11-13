@@ -12,13 +12,15 @@ use App\Http\Controllers\Dashboard\QrCodeController;
 use App\Http\Controllers\Dashboard\ReservationController;
 use App\Http\Controllers\Dashboard\RestaurantSettingsController;
 use App\Http\Controllers\Dashboard\ThemeController;
+use App\Http\Controllers\DemoMenuController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicMenuController;
 use App\Http\Controllers\PublicOrderController;
 use App\Http\Controllers\PublicReservationController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/login');
+Route::view('/', 'public.features')->name('public.features');
+Route::get('/demo', DemoMenuController::class)->name('public.demo');
 Route::get('/r/{restaurant}', [PublicMenuController::class, 'restaurant'])->name('public.restaurant');
 Route::post('/r/{restaurant}/orders/code', [PublicOrderController::class, 'sendCode'])->name('public.orders.code');
 Route::post('/r/{restaurant}/orders/confirm', [PublicOrderController::class, 'confirm'])->name('public.orders.confirm');
