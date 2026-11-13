@@ -73,6 +73,7 @@ test('public menu shows cafe contact links and other menu page links', function 
         'phone' => '01000000000',
         'whatsapp' => '201000000000',
         'website_url' => 'https://cafe.test',
+        'map_url' => 'https://maps.app.goo.gl/cafe-location',
         'instagram_url' => 'https://instagram.com/cafe',
         'address' => 'Cairo',
     ]);
@@ -85,12 +86,15 @@ test('public menu shows cafe contact links and other menu page links', function 
         ->assertSee('tel:01000000000')
         ->assertSee('https://wa.me/201000000000')
         ->assertSee('https://cafe.test')
+        ->assertSee('href="https://maps.app.goo.gl/cafe-location" target="_blank" rel="noopener"', false)
+        ->assertSee('<span>الموقع</span>', false)
+        ->assertDontSee('data-public-map-toggle', false)
         ->assertSee('data-public-menu-link', false)
         ->assertSee(route('public.menu', [$restaurant, $desserts]))
         ->assertSee('Desserts');
 });
 
-test('public menu shows a dynamic map and directions link', function () {
+test('public menu opens google maps from the header without a location tab or embedded map', function () {
     $restaurant = Restaurant::create([
         'name' => 'Cafe Mocha',
         'slug' => 'cafe-mocha',
@@ -101,12 +105,12 @@ test('public menu shows a dynamic map and directions link', function () {
 
     $this->get('/r/cafe-mocha')
         ->assertOk()
-        ->assertSee('data-public-map-toggle', false)
-        ->assertSee('data-public-map-panel', false)
-        ->assertSee('class="public-map-card mb-4 d-none"', false)
-        ->assertSee('https://www.google.com/maps?q=Nasr%20City%20Cairo&amp;output=embed', false)
+        ->assertDontSee('data-public-map-toggle', false)
+        ->assertDontSee('data-public-map-panel', false)
+        ->assertDontSee('menu-page-links', false)
+        ->assertDontSee('<iframe', false)
         ->assertSee('https://www.google.com/maps/dir/?api=1&amp;destination=Nasr%20City%20Cairo', false)
-        ->assertSee('اذهب للمكان');
+        ->assertSee('<span>الخريطة</span>', false);
 });
 
 test('public menu uses saved map coordinates before address', function () {
@@ -122,7 +126,7 @@ test('public menu uses saved map coordinates before address', function () {
 
     $this->get('/r/cafe-mocha')
         ->assertOk()
-        ->assertSee('https://www.google.com/maps?q=30.0444200%2C31.2357100&amp;output=embed', false)
+        ->assertDontSee('<iframe', false)
         ->assertSee('https://www.google.com/maps/dir/?api=1&amp;destination=30.0444200%2C31.2357100', false);
 });
 

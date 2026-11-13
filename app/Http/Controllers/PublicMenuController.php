@@ -46,9 +46,6 @@ class PublicMenuController extends Controller
             ? $restaurant->map_latitude.','.$restaurant->map_longitude
             : null;
         $mapQuery = $mapCoordinates ?: trim($restaurant->address ?: $restaurant->name);
-        $mapEmbedUrl = ($mapCoordinates || $restaurant->map_url || $mapQuery)
-            ? 'https://www.google.com/maps?q='.rawurlencode($mapCoordinates ?: ($restaurant->map_url ?: $mapQuery)).'&output=embed'
-            : null;
         $mapDirectionsUrl = $mapCoordinates
             ? 'https://www.google.com/maps/dir/?api=1&destination='.rawurlencode($mapCoordinates)
             : ($restaurant->map_url ?: ($mapQuery ? 'https://www.google.com/maps/dir/?api=1&destination='.rawurlencode($mapQuery) : null));
@@ -58,6 +55,6 @@ class PublicMenuController extends Controller
         $offers = $this->pricing->activeOffers($restaurant);
         $prices = $this->pricing->prices($restaurant, $menuPage->categories->flatMap->items, $offers);
 
-        return view('public.menu', compact('restaurant', 'menuPage', 'menuPages', 'mapEmbedUrl', 'mapDirectionsUrl', 'offers', 'prices'));
+        return view('public.menu', compact('restaurant', 'menuPage', 'menuPages', 'mapDirectionsUrl', 'offers', 'prices'));
     }
 }

@@ -120,39 +120,14 @@
         </div>
     @endif
 
-    @if($menuPages->count() > 1 || $mapEmbedUrl)
-        <nav class="menu-page-links mb-4" aria-label="روابط صفحات المنيو والموقع">
+    @if($menuPages->count() > 1)
+        <nav class="menu-page-links mb-4" aria-label="روابط صفحات المنيو">
             @foreach($menuPages as $page)
                 <a class="{{ $page->is($menuPage) ? 'active' : '' }}" data-public-menu-link href="{{ $page->is_default ? route('public.restaurant', $restaurant) : route('public.menu', [$restaurant, $page]) }}">
                     {{ $page->name }}
                 </a>
             @endforeach
-            @if($mapEmbedUrl)
-                <button class="menu-location-tab" type="button" data-public-map-toggle aria-expanded="false" aria-controls="menu-map-panel">
-                    <i class="bi bi-geo-alt"></i> الموقع
-                </button>
-            @endif
         </nav>
-    @endif
-
-    @if($mapEmbedUrl)
-        <section id="menu-map-panel" class="public-map-card mb-4 d-none" data-public-map-panel>
-            <div class="public-map-info">
-                <div>
-                    <span class="eyebrow text-primary">الموقع</span>
-                    <h2>تعال زورنا</h2>
-                    @if($restaurant->address)
-                        <p>{{ $restaurant->address }}</p>
-                    @endif
-                </div>
-                @if($mapDirectionsUrl)
-                    <a class="btn btn-primary" href="{{ $mapDirectionsUrl }}" target="_blank" rel="noopener">
-                        <i class="bi bi-signpost-split"></i> اذهب للمكان
-                    </a>
-                @endif
-            </div>
-            <iframe src="{{ $mapEmbedUrl }}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen title="خريطة {{ $restaurant->name }}"></iframe>
-        </section>
     @endif
 
     @if($menuPage->theme->enable_search)

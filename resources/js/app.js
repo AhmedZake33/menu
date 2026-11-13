@@ -233,24 +233,6 @@ const initPublicMenuAjax = () => {
     });
 };
 
-const initPublicMapTabs = (root = document) => {
-    root.querySelectorAll('[data-public-map-toggle]:not([data-map-toggle-ready])').forEach(button => {
-        button.dataset.mapToggleReady = '1';
-        button.addEventListener('click', () => {
-            const panel = document.querySelector('#menu-map-panel');
-            const shouldShow = panel?.classList.contains('d-none');
-
-            panel?.classList.toggle('d-none', !shouldShow);
-            button.classList.toggle('active', shouldShow);
-            button.setAttribute('aria-expanded', shouldShow ? 'true' : 'false');
-
-            if (shouldShow) {
-                panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
-    });
-};
-
 const initPublicOrdering = (root = document) => {
     const shell = root.querySelector?.('[data-public-menu-shell]:not([data-ordering-ready])')
         ?? (root.matches?.('[data-public-menu-shell]:not([data-ordering-ready])') ? root : null);
@@ -780,7 +762,6 @@ const initDashboardWidgets = (root = document) => {
     initMenuSearch(root);
     initPasswordToggles(root);
     initGooglePlaceId(root);
-    initPublicMapTabs(root);
     initPublicOrdering(root);
 };
 
