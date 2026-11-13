@@ -106,9 +106,9 @@ code { color: var(--brand-dark); background: var(--brand-soft); padding: .1em .4
 .app-shell { display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); min-height: 100vh; }
 .panel-sidebar { min-width: 0; }
 .panel-sidebar-inner { position: sticky; top: 0; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; background: var(--surface); border-inline-end: 1px solid var(--line); }
-/* Hide the sidebar scrollbar without cutting off navigation on short screens. */
-.panel-sidebar, .panel-sidebar-inner { scrollbar-width: none; }
-.panel-sidebar::-webkit-scrollbar, .panel-sidebar-inner::-webkit-scrollbar { display: none; }
+/* Hide the client sidebar scrollbar while keeping navigation reachable. */
+.client-panel .panel-sidebar, .client-panel .panel-sidebar-inner { scrollbar-width: none; }
+.client-panel .panel-sidebar::-webkit-scrollbar, .client-panel .panel-sidebar-inner::-webkit-scrollbar { display: none; }
 .panel-brand { display: flex; align-items: center; gap: .7rem; padding: 1.1rem 1.1rem .9rem; color: var(--ink); text-decoration: none; }
 .panel-brand-mark { display: grid; place-items: center; flex: 0 0 38px; width: 38px; height: 38px; border-radius: 11px; background: var(--brand); color: #fff; font-size: 1.15rem; }
 .panel-brand strong { display: block; font-weight: 700; line-height: 1.3; }

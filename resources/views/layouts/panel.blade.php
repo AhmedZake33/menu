@@ -33,7 +33,7 @@
         ],
     ];
 @endphp
-<body @if($tenant) data-restaurant-channel="{{ $user->restaurant_id }}" @endif>
+<body @class(['client-panel' => ! $isSuperAdmin]) @if($tenant) data-restaurant-channel="{{ $user->restaurant_id }}" @endif>
 
 <div class="app-shell">
     <aside id="panelSidebar" class="offcanvas-lg offcanvas-end panel-sidebar" tabindex="-1" aria-labelledby="panelSidebarLabel">

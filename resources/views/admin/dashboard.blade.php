@@ -3,7 +3,7 @@
 @section('content')
 <div class="page-head">
     <div><h1>نظرة عامة</h1><p>ملخص أداء منصة المنيو الإلكتروني</p></div>
-    <a class="btn btn-primary" href="{{ route('admin.restaurants.create') }}"><i class="bi bi-plus-lg"></i> مطعم جديد</a>
+    <a class="btn btn-primary" href="{{ route('admin.restaurants.create') }}"><i class="bi bi-plus-lg"></i> عميل جديد</a>
 </div>
 <div class="row g-3 mb-4">@foreach($stats as $label=>$value)<div class="col-6 col-xl-3"><div class="stat-card"><span>{{ $label }}</span><strong>{{ number_format($value) }}</strong></div></div>@endforeach</div>
 <div class="card">
