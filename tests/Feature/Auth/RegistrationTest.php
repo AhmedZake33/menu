@@ -199,3 +199,25 @@ test('the admin raises or removes the picture limit for a client and the client 
     $this->actingAs($owner)->post(route('dashboard.menu-images.store'), ['images' => [$pic(), $pic()]])->assertSessionHasNoErrors();
     expect($restaurant->menuImages()->count())->toBe(10);
 });
+
+test('a failed sign-up explains itself in Arabic instead of showing raw message keys', function () {
+    User::factory()->create(['email' => 'taken@example.com']);
+
+    $html = $this->from('/register')->followingRedirects()->post('/register', signup([
+        'restaurant_name' => '', 'phone' => '', 'email' => 'taken@example.com', 'password' => 'abc', 'password_confirmation' => 'x',
+    ]))->assertOk()->getContent();
+
+    expect($html)->toContain('حقل اسم المطعم مطلوب.')
+        ->toContain('حقل رقم التليفون مطلوب.')
+        ->toContain('البريد ده مسجل بالفعل')
+        ->toContain('تأكيد كلمة المرور غير مطابق.')
+        ->toContain('يجب ألا يقل طول كلمة المرور عن 8 أحرف.')
+        ->not->toContain('validation.');
+});
+
+test('a wrong login password is explained in Arabic', function () {
+    User::factory()->create(['email' => 'owner@example.com']);
+
+    $this->from('/login')->followingRedirects()->post('/login', ['email' => 'owner@example.com', 'password' => 'wrong'])
+        ->assertSee('البريد الإلكتروني أو كلمة المرور غير صحيحة.')->assertDontSee('auth.failed');
+});
