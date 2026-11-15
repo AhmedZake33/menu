@@ -123,11 +123,17 @@ test('an upper-case link is saved in lower case', function () {
     expect(Restaurant::where('slug', 'cafe-mocha')->exists())->toBeTrue();
 });
 
-test('a bot that fills the hidden field creates nothing', function () {
-    $this->post('/register', signup(['company_website' => 'http://spam.example']))->assertRedirect(route('public.features'));
+test('browser autofill of an unexpected field never stops a real sign-up', function () {
+    $this->post('/register', signup(['company_website' => 'http://autofilled.example', 'website' => 'x', 'company' => 'y']))
+        ->assertRedirect(route('dashboard.home'));
 
-    expect(Restaurant::count())->toBe(0)->and(User::count())->toBe(0);
-    $this->assertGuest();
+    expect(Restaurant::where('slug', 'cafe-mocha')->exists())->toBeTrue()
+        ->and(User::where('email', 'ahmed@example.com')->exists())->toBeTrue();
+    $this->assertAuthenticated();
+});
+
+test('the sign-up form has no hidden field that could swallow a real sign-up', function () {
+    $this->get('/register')->assertOk()->assertDontSee('company_website');
 });
 
 test('one address cannot open accounts without limit', function () {

@@ -19,11 +19,6 @@
     <form method="POST" action="{{ route('register') }}" data-register-form>
         @csrf
 
-        {{-- Bots fill every field they find; people never see this one. --}}
-        <div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);opacity:0;pointer-events:none" aria-hidden="true">
-            <label>لا تملأ هذا الحقل <input type="text" name="company_website" tabindex="-1" autocomplete="off"></label>
-        </div>
-
         <h3 class="h6 text-muted mb-3"><i class="bi bi-shop"></i> بيانات المطعم</h3>
 
         <div class="mb-3">

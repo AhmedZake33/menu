@@ -41,11 +41,6 @@ class RegisteredUserController extends Controller
     {
         $this->ensureSignupIsOpen();
 
-        // Hidden field that people never see; bots fill it. Pretend it worked.
-        if ($request->filled('company_website')) {
-            return redirect()->route('public.features');
-        }
-
         // The link is typed in Latin letters and is case-insensitive.
         $request->merge(['slug' => Str::lower(trim((string) $request->input('slug')))]);
 
