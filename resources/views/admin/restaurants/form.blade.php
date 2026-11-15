@@ -3,7 +3,7 @@
 @section('content')
 @php
     $cashier = $restaurant->cashierSettings();
-    $moduleOn = fn (string $key) => (bool) old("modules.$key", $restaurant->hasModule($key));
+    $moduleOn = fn (string $key) => (bool) old("modules.$key", $restaurant->moduleEnabled($key));
 @endphp
 
 <div class="page-head">
@@ -49,6 +49,16 @@
                 </div>
             @endunless
         </div>
+    </section>
+
+    <section class="card form-section">
+        <h2><i class="bi bi-images"></i> نوع المنيو</h2>
+        <p class="section-hint">المنيو الرقمي يُبنى من لوحة العميل، أما "منيو بالصور" فيرفع العميل صور منيوه وتظهر على الرابط والـ QR. العميل نفسه يقدر يغيّره من لوحته طالما قسم "المنيو بالصور" مفعّل له.</p>
+        <select class="form-select" name="menu_mode" style="max-width: 320px">
+            @foreach(config('modules.menu_modes') as $mode => $modeLabel)
+                <option value="{{ $mode }}" @selected(old('menu_mode', $restaurant->menu_mode ?? 'digital') === $mode)>{{ $modeLabel }}</option>
+            @endforeach
+        </select>
     </section>
 
     <section class="card form-section">

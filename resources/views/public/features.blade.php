@@ -20,6 +20,9 @@
         <nav class="marketing-nav-links" aria-label="القائمة الرئيسية">
             <a href="#features">المميزات</a><a href="#menu-preview">شكل المنيو</a><a href="#how-it-works">إزاي بيشتغل؟</a>
         </nav>
+        @if(config('modules.signup.enabled'))
+            <a class="btn btn-primary" href="{{ route('register') }}">سجّل مطعمك مجانًا</a>
+        @endif
         <a class="btn btn-outline-primary" href="{{ route('login') }}">تسجيل الدخول <i class="bi bi-arrow-up-left" aria-hidden="true"></i></a>
     </div>
 </header>
@@ -30,7 +33,12 @@
             <h1>من أول مسحة QR.<br>لحد <em>آخر فاتورة.</em></h1>
             <p class="marketing-lead">منيو يليق بمكانك، وطلبات أسهل لعملائك.<br>تابع المنيو والعروض والحجوزات والكاشير من لوحة واحدة.</p>
             <div class="marketing-actions">
-                <a class="btn btn-primary btn-lg" href="{{ route('public.demo') }}">جرّب المنيو <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+                @if(config('modules.signup.enabled'))
+                    <a class="btn btn-primary btn-lg" href="{{ route('register') }}">ابدأ تجربة مجانية {{ config('modules.signup.trial_days') }} يوم <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+                    <a class="btn btn-outline-primary btn-lg" href="{{ route('public.demo') }}">جرّب المنيو</a>
+                @else
+                    <a class="btn btn-primary btn-lg" href="{{ route('public.demo') }}">جرّب المنيو <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+                @endif
                 <a class="marketing-text-link" href="#features">اكتشف المميزات <i class="bi bi-arrow-down" aria-hidden="true"></i></a>
             </div>
             <div class="marketing-hero-notes"><span><i class="bi bi-check2" aria-hidden="true"></i> يفتح من الموبايل</span><span><i class="bi bi-check2" aria-hidden="true"></i> بدون تحميل تطبيق</span><span><i class="bi bi-check2" aria-hidden="true"></i> تصميم بهوية مطعمك</span></div>

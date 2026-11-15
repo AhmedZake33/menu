@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Tafra Tech شركة لتطوير البرمجيات والمنتجات الرقمية. اكتشف مشروعينا: Clinic لإدارة العيادات وDigital Menu للمطاعم والكافيهات.">
+    <meta name="theme-color" content="#0a2b3e">
+    <title>Tafra Tech | شركة برمجيات - Clinic وDigital Menu</title>
+    <!-- Font Awesome 6 (مجاني) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fc 0%, #eef2f9 100%);
+            color: #1a2a3f;
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        :root {
+            --primary: rgb(104, 167, 163);
+            --primary-dark: #326c68;
+            --primary-light: rgba(104, 167, 163, 0.15);
+            --primary-soft: rgba(104, 167, 163, 0.08);
+            --discount-bg: #fee2e2;
+            --discount-text: #b91c1c;
+            --popular-bg: linear-gradient(135deg, #0a2b3e 0%, #1a4a5f 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            background: #0a2b3e;
+            padding: 1.5rem 2rem;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .tagline {
+            color: #cbd5e1;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .hero {
+            padding: 3rem 2rem;
+            text-align: center;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        .hero h1 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            color: #0f2b3d;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 1.5rem auto;
+            color: #2c3e50;
+        }
+
+        .product-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--primary-light);
+            padding: 0.7rem 1.5rem;
+            border-radius: 60px;
+            margin-top: 1rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .btn-demo {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.9rem 2rem;
+            border-radius: 60px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 1.5rem;
+            transition: all 0.25s;
+            box-shadow: 0 5px 12px rgba(104, 167, 163, 0.35);
+        }
+
+        .btn-demo:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+
+        .product-showcase {
+            padding: 2rem 2rem;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            color: #0a2b3e;
+            position: relative;
+        }
+
+        .section-title:after {
+            content: '';
+            display: block;
+            width: 70px;
+            height: 3px;
+            background: var(--primary);
+            margin: 12px auto 0;
+            border-radius: 3px;
+        }
+
+        .product-card {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-info {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .product-info h3 {
+            font-size: 1.7rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.8rem;
+        }
+
+        .features-list {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .features-list li {
+            margin: 0.6rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .features-list i {
+            color: var(--primary);
+            width: 22px;
+        }
+
+        .mock-icon {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            background: var(--primary-soft);
+            padding: 2rem;
+            border-radius: 32px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            border: 1px solid rgba(104, 167, 163, 0.2);
+        }
+
+        .mock-icon i {
+            font-size: 5rem;
+            color: var(--primary);
+        }
+
+        /* ===== Pricing Section (خطط شهرية، نص سنوية، سنوية) ===== */
+        .pricing-section {
+            padding: 2.5rem 2rem;
+            background: #ffffff;
+        }
+
+        .pricing-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.8rem;
+            justify-content: center;
+            align-items: stretch;
+            margin-top: 1rem;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 1.8rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            flex: 1;
+            min-width: 270px;
+            transition: transform 0.2s ease, box-shadow 0.2s;
+            border: 1px solid #eef2f8;
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 22px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--primary);
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .pricing-header {
+            background: #0a2b3e;
+            color: white;
+            padding: 1.5rem 1rem;
+            text-align: center;
+        }
+
+        .pricing-header h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .pricing-header i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .pricing-header .period {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .pricing-details {
+            padding: 1.8rem;
+        }
+
+        .price {
+            text-align: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .current-price {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .currency {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .price-note {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+            margin-top: 0.3rem;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 1rem 0;
+        }
+
+        .save-tag {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 20px;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.7rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+
+        .doctor-addon {
+            background: #f1f5f9;
+            border-radius: 1rem;
+            padding: 0.9rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .doctor-addon p {
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+        }
+
+        .addon-price {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .btn-pricing {
+            display: block;
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 0.75rem;
+            border-radius: 3rem;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 1.2rem;
+            transition: 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn-pricing:hover {
+            background: var(--primary-dark);
+        }
+
+        .pricing-footnote {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #5b6e8c;
+            margin-top: 1rem;
+            border-top: 1px solid #e2edf2;
+            padding-top: 1rem;
+        }
+
+        .offer-banner {
+            background: var(--primary-light);
+            border-radius: 2rem;
+            margin-top: 2rem;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid rgba(104, 167, 163, 0.3);
+        }
+
+        /* ===== License & Deployment Services ===== */
+        .services-section {
+            padding: 2.5rem 2rem;
+            background: #f0f4fb;
+            border-top: 1px solid #dce3ed;
+            border-bottom: 1px solid #dce3ed;
+        }
+
+        .services-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 1.8rem;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+            padding: 2rem 1.8rem;
+            flex: 1;
+            min-width: 250px;
+            max-width: 340px;
+            text-align: center;
+            transition: transform 0.2s;
+            border: 1px solid #eaf0f5;
+            position: relative;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .service-card .service-icon {
+            font-size: 2.8rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .service-card h4 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #0f2b3d;
+        }
+
+        .service-card .service-price {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin: 0.5rem 0 0.8rem;
+        }
+
+        .service-card ul {
+            list-style: none;
+            margin: 1rem 0;
+            text-align: right;
+        }
+
+        .service-card ul li {
+            padding: 0.4rem 0;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .service-card ul li i {
+            color: var(--primary);
+            width: 20px;
+        }
+
+        .service-card .btn-service {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.7rem 1.6rem;
+            border-radius: 60px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 0.5rem;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .service-card .btn-service:hover {
+            background: var(--primary-dark);
+        }
+
+        .service-card .badge-service {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #f1c40f;
+            color: #1e2f3e;
+            font-size: 0.6rem;
+            font-weight: bold;
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+        }
+
+        .service-card .badge-service.green {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .service-card .badge-service.purple {
+            background: #9b59b6;
+            color: white;
+        }
+
+        /* ===== Contact Form ===== */
+        .contact-section {
+            padding: 2.5rem 2rem;
+            background: #f9fbfe;
+        }
+
+        .form-container {
+            max-width: 750px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 12px 25px rgba(0,0,0,0.05);
+            border: 1px solid #e9edf2;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1e2f3e;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 1rem;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(104, 167, 163, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 110px;
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.9rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 3rem;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(0.98);
+        }
+
+        .form-status {
+            margin-top: 1rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .info-email {
+            text-align: center;
+            margin-top: 1.8rem;
+            font-size: 0.9rem;
+            color: #475569;
+            background: var(--primary-soft);
+            display: inline-block;
+            width: auto;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+        }
+
+        .footer {
+            background: #0a2b3e;
+            color: #9ca3af;
+            text-align: center;
+            padding: 1.8rem;
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        html { scroll-behavior: smooth; }
+        a, button, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+        a:focus-visible, button:focus-visible { outline: 3px solid var(--primary-dark); outline-offset: 5px; }
+        .btn-demo, .btn-pricing, .service-card .btn-service, .submit-btn { background: var(--primary-dark); }
+        .skip-link { position: absolute; top: -80px; right: 20px; padding: 12px; background: white; color: #0a2b3e; z-index: 10; }
+        .skip-link:focus { top: 12px; }
+        .header { display: flex; align-items: center; justify-content: space-between; gap: 24px; text-align: right; }
+        .brand-link { text-decoration: none; }
+        .header nav { display: flex; gap: 24px; flex-wrap: wrap; }
+        .header nav a { color: #e2e8f0; font-size: .9rem; text-decoration: none; }
+        .header nav a:hover { color: white; text-decoration: underline; text-underline-offset: 6px; }
+        .header a:focus-visible { outline-color: white; }
+        .company-hero { display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; align-items: center; text-align: right; padding-block: 4rem; }
+        .company-eyebrow { display: inline-block; color: var(--primary-dark); font-size: .85rem; font-weight: 700; margin-bottom: 1rem; }
+        .company-hero h1 { font-size: clamp(1.8rem, 3.3vw, 2.7rem); line-height: 1.55; letter-spacing: -.6px; }
+        .company-hero h1 span { color: var(--primary-dark); }
+        .company-hero p { font-size: 1.05rem; color: #526278; line-height: 1.9; margin: 0; }
+        .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-top: 24px; }
+        .hero-actions .btn-demo { margin-top: 0; }
+        .secondary-link { color: #0a2b3e; font-weight: 600; text-decoration: none; padding: .8rem .4rem; }
+        .secondary-link:hover { text-decoration: underline; }
+        .portfolio-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 20px; background: #edf4f3; border: 1px solid #dce8e6; border-radius: 24px; }
+        .portfolio-tile { display: flex; flex-direction: column; gap: 10px; text-decoration: none; padding: 28px 18px; border-radius: 16px; min-width: 0; }
+        .portfolio-tile.clinic { background: #0a2b3e; color: white; }
+        .portfolio-tile.menu { background: #fff5e6; color: #784a19; }
+        .portfolio-tile > i { font-size: 2rem; margin-bottom: 18px; }
+        .portfolio-tile strong { font-size: 1.15rem; }
+        .portfolio-tile small { font-size: .8rem; line-height: 1.7; }
+        .portfolio-caption { grid-column: 1 / -1; text-align: center; color: #526278; font-size: .75rem; }
+        .company-values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; padding: 2rem; border-top: 1px solid #e2e8f0; }
+        .company-values h2 { font-size: 1rem; margin-bottom: 8px; }
+        .company-values p { color: #526278; font-size: .85rem; line-height: 1.8; }
+        .company-values i { color: var(--primary-dark); margin-left: 8px; }
+        .section-intro { max-width: 700px; text-align: center; margin: -12px auto 28px; color: #526278; line-height: 1.8; font-size: .95rem; }
+        .projects-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+        .project { display: flex; flex-direction: column; align-items: stretch; justify-content: start; gap: 0; padding: 28px; border: 1px solid #dce8e6; border-radius: 22px; background: #fcfefe; min-width: 0; }
+        .project.menu-project { border-color: #ecdfcd; background: #fffcf7; }
+        .project-top { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+        .project-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: #e5f0ee; color: var(--primary-dark); font-size: 1.6rem; flex-shrink: 0; }
+        .menu-project .project-icon { background: #f6ead7; color: #784a19; }
+        .project h3 { color: #0a2b3e; margin-bottom: 3px; font-size: 1.45rem; }
+        .project-top p { color: #526278; font-size: .82rem; }
+        .project > p { color: #526278; font-size: .94rem; line-height: 1.85; }
+        .project .features-list { flex: 1; margin-block: 20px; }
+        .project .features-list li { align-items: baseline; font-size: .9rem; gap: 9px; }
+        .project .features-list i { flex: 0 0 18px; color: var(--primary-dark); }
+        .project-actions { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-top: 8px; }
+        .project-actions .btn-demo { margin: 0; font-size: .85rem; padding: .8rem 1.2rem; }
+        .project-actions > a:not(.btn-demo) { color: var(--primary-dark); font-size: .85rem; font-weight: 600; text-underline-offset: 4px; }
+        .project-note { color: #65758a; font-size: .75rem; margin-top: 18px; }
+        .pricing-scope { max-width: 750px; margin: 0 auto 24px; text-align: center; color: #526278; line-height: 1.8; }
+        .contact-intro { text-align: center; margin-bottom: 24px; color: #526278; }
+        .form-note { font-size: .8rem; color: #526278; line-height: 1.8; margin-top: 14px; }
+        .info-email { overflow-wrap: anywhere; }
+        .info-email a { color: var(--primary-dark); }
+        .footer a { color: #bfdedb; }
+        section[id] { scroll-margin-top: 20px; }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header { flex-direction: column; align-items: start; padding: 1.5rem; gap: 20px; }
+            .header nav { gap: 18px; }
+            .company-hero { grid-template-columns: 1fr; gap: 28px; padding: 2rem 1.5rem; }
+            .hero h1 { font-size: 1.7rem; }
+            .company-values { grid-template-columns: 1fr; gap: 20px; padding: 1.5rem; }
+            .projects-grid { grid-template-columns: 1fr; }
+            .product-showcase, .pricing-section, .services-section, .contact-section { padding: 2rem 1.25rem; }
+            .project { padding: 22px; }
+            .portfolio-preview { padding: 12px; gap: 12px; }
+            .portfolio-tile { padding: 22px 12px; }
+            .portfolio-tile strong { font-size: 1rem; }
+            .form-container { padding: 1.25rem; }
+            .section-title { font-size: 1.5rem; }
+            .pricing-card { min-width: 0; flex-basis: 100%; }
+            .current-price { font-size: 2rem; }
+            .service-card { min-width: 0; max-width: 100%; flex-basis: 100%; }
+            .submit-btn { padding: .9rem 1rem; font-size: 1rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            *, *::before, *::after { transition: none !important; }
+        }
+    </style>
+</head>
+<body>
+<a href="#main" class="skip-link">انتقل إلى المحتوى</a>
+
+<div class="container">
+    <header class="header">
+        <a class="brand-link" href="#main" aria-label="Tafra Tech - الرئيسية"><div class="logo" dir="ltr">Tafra <span>Tech</span></div><p class="tagline">شركة لتطوير البرمجيات والمنتجات الرقمية</p></a>
+        <nav aria-label="القائمة الرئيسية"><a href="#about">عن الشركة</a><a href="#projects">مشروعاتنا</a><a href="#contact">تواصل معنا</a></nav>
+    </header>
+
+    <main id="main">
+    <section class="hero company-hero" id="about">
+        <div>
+            <span class="company-eyebrow">طفرة في طريقة إدارة أعمالك</span>
+            <h1>نطوّر البرمجيات.<br><span>ونبسّط تفاصيل يومك.</span></h1>
+            <p>نحن Tafra Tech، شركة برمجيات تطوّر منتجات رقمية تساعد أصحاب الأعمال على تنظيم شغلهم. نقدّم حاليًا Clinic للعيادات، وDigital Menu للمطاعم والكافيهات.</p>
+            <div class="hero-actions"><a href="#projects" class="btn-demo">اكتشف مشروعاتنا <i class="fas fa-arrow-left" aria-hidden="true"></i></a><a href="#contact" class="secondary-link">تحدّث معنا عن احتياجك</a></div>
+        </div>
+        <div class="portfolio-preview" aria-label="مشروعات Tafra Tech">
+            <a class="portfolio-tile clinic" href="#clinic"><i class="fas fa-stethoscope" aria-hidden="true"></i><strong dir="ltr">Clinic</strong><small>تنظيم العيادة ورعاية تفاصيلها.</small></a>
+            <a class="portfolio-tile menu" href="#digital-menu"><i class="fas fa-utensils" aria-hidden="true"></i><strong dir="ltr">Digital Menu</strong><small>من المنيو إلى الطلب والفاتورة.</small></a>
+            <span class="portfolio-caption">مشروعان لقطاعين مختلفين. والهدف واحد: شغل أسهل.</span>
+        </div>
+    </section>
+
+    <section class="company-values" aria-label="كيف نصمم منتجاتنا">
+        <div><h2><i class="fas fa-code" aria-hidden="true"></i> برمجيات تخدم شغلك</h2><p>منتجات تركّز على المهام اليومية وتنظيم المعلومات في مكان واحد.</p></div>
+        <div><h2><i class="fas fa-mobile-alt" aria-hidden="true"></i> تجربة عربية واضحة</h2><p>واجهات سهلة الاستخدام تراعي عرض المحتوى على الكمبيوتر والموبايل.</p></div>
+        <div><h2><i class="fas fa-layer-group" aria-hidden="true"></i> حلول متخصصة</h2><p>لكل قطاع تفاصيله؛ لذلك لكل مشروع تجربة تناسب طبيعة مستخدميه.</p></div>
+    </section>
+
+    <section class="product-showcase" id="projects">
+        <h2 class="section-title">مشروعاتنا</h2>
+        <p class="section-intro">اكتشف الحل المناسب لنشاطك، وتعرّف على مميزاته وتفاصيل الاشتراك فيه.</p>
+        <div class="projects-grid">
+            <article class="product-card project" id="clinic">
+                <div class="project-top"><span class="project-icon"><i class="fas fa-stethoscope" aria-hidden="true"></i></span><div><h3 dir="ltr">Clinic</h3><p>نظام إدارة العيادات الطبية</p></div></div>
+                <p>منصة لتنظيم المواعيد وملفات المرضى والسجلات الطبية، ومتابعة أعمال العيادة من مكان واحد.</p>
+                <ul class="features-list">
+                    <li><i class="fas fa-calendar-check" aria-hidden="true"></i> جدولة مواعيد العيادة</li>
+                    <li><i class="fas fa-notes-medical" aria-hidden="true"></i> ملفات وسجلات طبية رقمية للمرضى</li>
+                    <li><i class="fas fa-file-medical" aria-hidden="true"></i> روشتات إلكترونية</li>
+                    <li><i class="fas fa-chart-line" aria-hidden="true"></i> تقارير ولوحة متابعة</li>
+                    <li><i class="fas fa-mobile-alt" aria-hidden="true"></i> واجهة متوافقة مع الموبايل والتابلت</li>
+                </ul>
+                <div class="project-actions"><a href="https://clinic.tafratech.com" target="_blank" rel="noopener noreferrer" class="btn-demo">زيارة Clinic <i class="fas fa-external-link-alt" aria-hidden="true"></i></a><a href="#pricing">باقات Clinic</a><a href="#contact" data-project="clinic">استفسر عن المشروع</a></div>
+            </article>
+            <article class="product-card project menu-project" id="digital-menu">
+                <div class="project-top"><span class="project-icon"><i class="fas fa-utensils" aria-hidden="true"></i></span><div><h3 dir="ltr">Digital Menu</h3><p>منيو إلكتروني وإدارة للمطاعم والكافيهات</p></div></div>
+                <p>اعرض أصنافك وأسعارك بمنيو إلكتروني، واستقبل الطلبات والحجوزات وتابع الكاشير من لوحة مطعمك.</p>
+                <ul class="features-list">
+                    <li><i class="fas fa-qrcode" aria-hidden="true"></i> منيو برابط وQR Code بدون تحميل تطبيق</li>
+                    <li><i class="fas fa-palette" aria-hidden="true"></i> صور الأصناف وتصميم بهوية مطعمك</li>
+                    <li><i class="fas fa-tags" aria-hidden="true"></i> خصومات وعروض بمدة محددة</li>
+                    <li><i class="fas fa-calendar-check" aria-hidden="true"></i> طلبات أونلاين وحجز طاولات</li>
+                    <li><i class="fas fa-receipt" aria-hidden="true"></i> كاشير وإيصالات وتقارير تحصيل يومية</li>
+                    <li><i class="fas fa-map-marker-alt" aria-hidden="true"></i> روابط الموقع والتواصل وتقييم Google</li>
+                </ul>
+                <div class="project-actions"><a href="https://menu.tafratech.com" target="_blank" rel="noopener noreferrer" class="btn-demo">زيارة Digital Menu <i class="fas fa-external-link-alt" aria-hidden="true"></i></a><a href="#contact" data-project="digital-menu">استفسر عن الباقات</a></div>
+                <p class="project-note">تواصل معنا لمعرفة باقات Digital Menu والأقسام المتاحة لكل اشتراك.</p>
+            </article>
+        </div>
+    </section>
+
+    <!-- ===== خطط الاشتراك: شهرية / نص سنوية / سنوية ===== -->
+    <div class="pricing-section" id="pricing">
+        <h2 class="section-title">باقات Clinic لإدارة العيادات <i class="fas fa-calendar-alt" aria-hidden="true"></i></h2>
+        <p class="pricing-scope">الأسعار التالية تخص مشروع Clinic فقط. لمعرفة باقات Digital Menu، <a href="#contact" data-project="digital-menu">تواصل معنا</a>.</p>
+        <div class="pricing-grid">
+            
+            <!-- الباقة الشهرية 650 ج.م -->
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <i class="fas fa-calendar-week"></i>
+                    <h3>شهري</h3>
+                    <div class="period">مرونة كاملة · تجديد تلقائي</div>
+                </div>
+                <div class="pricing-details">
+                    <div class="price">
+                        <span class="current-price">650 <span class="currency">ج.م</span></span>
+                        <div class="price-note">شهرياً</div>
+                    </div>
+                    <ul class="features-list" style="margin-top: 0.2rem;">
+                        <li><i class="fas fa-check-circle"></i> جميع ميزات النظام الأساسية</li>
+                        <li><i class="fas fa-user-md"></i> يشمل دكتور أساسي واحد</li>
+                        <li><i class="fas fa-headset"></i> دعم فني أولوية</li>
+                        <li><i class="fas fa-chart-simple"></i> تقارير وتحليلات</li>
+                        <li><i class="fas fa-ban"></i> لا التزام سنوي</li>
+                    </ul>
+                    <div class="doctor-addon">
+                        <p><i class="fas fa-user-plus"></i> إضافة دكتور إضافي</p>
+                        <div><span class="addon-price">+150 ج.م</span> / شهرياً لكل دكتور</div>
+                    </div>
+                    <a href="#contact" class="btn-pricing">اطلب الباقة الشهرية <i class="fas fa-arrow-left"></i></a>
+                </div>
+            </div>
+
+            <!-- الباقة نصف السنوية (6 أشهر) 3600 ج.م -->
+            <div class="pricing-card">
+                <div class="popular-badge"><i class="fas fa-star"></i> الأفضل قيمة</div>
+                <div class="pricing-header" style="background: linear-gradient(135deg, #0f3b4f, #0a2b3e);">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>نصف سنوي</h3>
+                    <div class="period">6 أشهر · وفر أكثر</div>
+                </div>
+                <div class="pricing-details">
+                    <div class="price">
+                        <span class="current-price">3,600 <span class="currency">ج.م</span></span>
+                        <div class="price-note">لمدة 6 أشهر</div>
+                        <div><span class="save-tag"><i class="fas fa-tag"></i> وفر 300 ج.م مقارنة بالشهري</span></div>
+                    </div>
+                    <ul class="features-list" style="margin-top: 0.2rem;">
+                        <li><i class="fas fa-check-circle"></i> جميع الميزات الأساسية + دعم مميز</li>
+                        <li><i class="fas fa-user-md"></i> دكتور أساسي واحد شامل</li>
+                        <li><i class="fas fa-chart-line"></i> تحديثات مجانية طوال 6 أشهر</li>
+                        <li><i class="fas fa-database"></i> نسخ احتياطي أسبوعي</li>
+                    </ul>
+                    <div class="doctor-addon">
+                        <p><i class="fas fa-user-plus"></i> إضافة دكتور إضافي (نصف سنوي)</p>
+                        <div><span class="addon-price">+900 ج.م</span> لكل دكتور إضافي / 6 أشهر</div>
+                        <small style="font-size:0.7rem;">(ما يعادل 150 ج.م شهرياً)</small>
+                    </div>
+                    <a href="#contact" class="btn-pricing">اختر الخطة نصف السنوية</a>
+                </div>
+                <div class="pricing-footnote">
+                    <i class="fas fa-chart-line"></i> خصم مميز على الدفع المسبق
+                </div>
+            </div>
+
+            <!-- الباقة السنوية 7000 ج.م مع عرض التوفير -->
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <i class="fas fa-calendar-year"></i>
+                    <h3>سنوي</h3>
+                    <div class="period">أفضل توفير · 12 شهراً</div>
+                </div>
+                <div class="pricing-details">
+                    <div class="price">
+                        <span class="current-price">7,000 <span class="currency">ج.م</span></span>
+                        <div class="price-note">سنوياً (شامل ضريبة)</div>
+                        <div><span class="save-tag"><i class="fas fa-gem"></i> وفر 800 ج.م</span> <span style="font-size:0.7rem;">مقارنة بالدفع الشهري</span></div>
+                    </div>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i> جميع مميزات النظام المتقدمة</li>
+                        <li><i class="fas fa-chalkboard-user"></i> دعم فني على مدار الساعة</li>
+                        <li><i class="fas fa-cloud-upload-alt"></i> تحديثات مجانية لمدة عام</li>
+                        <li><i class="fas fa-chart-simple"></i> تحليلات متقدمة ولوحات تحكم</li>
+                        <li><i class="fas fa-headset"></i> استشارات مجانية للتشغيل</li>
+                    </ul>
+                    <div class="doctor-addon">
+                        <p><i class="fas fa-user-plus"></i> إضافة دكتور إضافي (سنوياً)</p>
+                        <div><span class="addon-price">+1,500 ج.م</span> لكل دكتور إضافي / سنة</div>
+                        <small style="font-size:0.7rem;">أفضل سعر للإضافات السنوية</small>
+                    </div>
+                    <a href="#contact" class="btn-pricing">اشتراك سنوي – أفضل عائد</a>
+                </div>
+                <div class="pricing-footnote">
+                    <i class="fas fa-percent"></i> العرض السنوي ثابت طوال العام
+                </div>
+            </div>
+        </div>
+
+        <!-- لافتة توضيحية شاملة -->
+        <div class="offer-banner">
+            <i class="fas fa-chart-line" style="color: var(--primary);"></i> 
+            <strong>خطط مرنة تناسب عيادتك:</strong> شهري (650 ج.م) | نصف سنوي (3,600 ج.م) | سنوي (7,000 ج.م)
+            <span style="display:block; font-size:0.85rem; margin-top:6px;">⭐ رسوم إضافة الأطباء: شهرياً +150 ج.م للدكتور | نصف سنوي +900 ج.م | سنوياً +1,500 ج.م</span>
+        </div>
+    </div>
+
+    <!-- ===== خدمات بيع الكود والتنصيب ===== -->
+    <div class="services-section" id="services">
+        <h2 class="section-title">خدمات الكود والتنصيب لنظام Clinic <i class="fas fa-code" aria-hidden="true"></i></h2>
+        <div class="services-grid">
+
+            <!-- خدمة 1: شراء الكود المصدري 20,000 ج.م -->
+            <div class="service-card">
+                <span class="badge-service">شهادة ملكية</span>
+                <div class="service-icon"><i class="fas fa-file-code"></i></div>
+                <h4>شراء الكود المصدري</h4>
+                <div class="service-price">20,000 ج.م</div>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> كود كامل غير مشفر</li>
+                    <li><i class="fas fa-check-circle"></i> حقوق استخدام دائمة</li>
+                    <li><i class="fas fa-check-circle"></i> دليل التنصيب الذاتي</li>
+                    <li><i class="fas fa-check-circle"></i> تحديثات لمدة 6 أشهر</li>
+                    <li><i class="fas fa-check-circle"></i> دعم فني لمدة شهر</li>
+                </ul>
+                <a href="#contact" class="btn-service"><i class="fas fa-shopping-cart"></i> شراء الكود</a>
+            </div>
+
+            <!-- خدمة 2: تنصيب على سيرفر العميل 5,000 ج.م -->
+            <div class="service-card">
+                <span class="badge-service green">مضمنة الضمان</span>
+                <div class="service-icon"><i class="fas fa-server"></i></div>
+                <h4>خدمة التنصيب على سيرفرك</h4>
+                <div class="service-price">5,000 ج.م</div>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> تنصيب كامل على سيرفرك</li>
+                    <li><i class="fas fa-check-circle"></i> تهيئة قاعدة البيانات</li>
+                    <li><i class="fas fa-check-circle"></i> ضبط الإعدادات الأساسية</li>
+                    <li><i class="fas fa-check-circle"></i> اختبار التشغيل الشامل</li>
+                    <li><i class="fas fa-check-circle"></i> ضمان 15 يوم بعد التنصيب</li>
+                </ul>
+                <a href="#contact" class="btn-service"><i class="fas fa-cogs"></i> حجز خدمة التنصيب</a>
+            </div>
+
+            <!-- خدمة 3: حزمة كاملة (كود + تنصيب) 25,000 ج.م -->
+            <div class="service-card" style="border: 2px solid var(--primary);">
+                <span class="badge-service purple">الأفضل قيمة</span>
+                <div class="service-icon"><i class="fas fa-box"></i></div>
+                <h4>كود + تنصيب شامل</h4>
+                <div class="service-price" style="color: #0a2b3e;">25,000 ج.م</div>
+                <div style="background: #e8f5e9; border-radius: 40px; padding: 0.2rem; font-size:0.75rem; margin-bottom:0.5rem;">
+                    <i class="fas fa-tag"></i> وفر 0 ج.م عند الشراء المنفصل
+                </div>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> الكود المصدري الكامل</li>
+                    <li><i class="fas fa-check-circle"></i> تنصيب احترافي على سيرفرك</li>
+                    <li><i class="fas fa-check-circle"></i> تهيئة شاملة للنظام</li>
+                    <li><i class="fas fa-check-circle"></i> تدريب لمدة ساعتين (أونلاين)</li>
+                    <li><i class="fas fa-check-circle"></i> دعم فني لمدة 6 أشهر</li>
+                </ul>
+                <a href="#contact" class="btn-service" style="background: #0a2b3e;"><i class="fas fa-gem"></i> اطلب الحزمة الكاملة</a>
+            </div>
+
+        </div>
+        <!-- ملاحظة إضافية -->
+        <div style="text-align:center; margin-top:1.8rem; font-size:0.9rem; color:#2c3e50; background: #dff0f5; padding:0.8rem; border-radius:40px;">
+            <i class="fas fa-shield-alt" style="color: var(--primary);"></i> 
+            جميع خدمات الكود والتنصيب تتضمن <strong>ضمان الجودة</strong> واستلام الكود عبر <strong>GitHub خاص</strong> أو <strong>رابط تحميل</strong>.
+        </div>
+    </div>
+
+    <!-- Company contact: enquiries for either project or Tafra Tech. -->
+    <div class="contact-section" id="contact">
+        <h2 class="section-title">تواصل مع Tafra Tech <i class="fas fa-envelope" aria-hidden="true"></i></h2>
+        <p class="contact-intro">اختر المشروع اللي يهمك، واحكِ لنا عن احتياجك.</p>
+        <div class="form-container">
+            <form id="contactForm" action="mailto:info.tafratech@gmail.com" method="post" enctype="text/plain">
+                <div class="form-group">
+                    <label for="fullname"><i class="fas fa-user" aria-hidden="true"></i> الاسم الكامل</label>
+                    <input type="text" id="fullname" name="fullname" autocomplete="name" placeholder="أدخل اسمك" required>
+                </div>
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope" aria-hidden="true"></i> البريد الإلكتروني</label>
+                    <input type="email" id="email" name="email" autocomplete="email" dir="ltr" placeholder="example@domain.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone"><i class="fas fa-phone-alt" aria-hidden="true"></i> رقم الهاتف (اختياري)</label>
+                    <input type="tel" id="phone" name="phone" autocomplete="tel" dir="ltr" placeholder="+20 12xxxxxx">
+                </div>
+                <div class="form-group">
+                    <label for="projectInterest">المشروع محل الاهتمام</label>
+                    <select id="projectInterest" name="project" required>
+                        <option value="" disabled selected>اختر المشروع</option>
+                        <option value="clinic">Clinic — إدارة العيادات</option>
+                        <option value="digital-menu">Digital Menu — المطاعم والكافيهات</option>
+                        <option value="general">استفسار عام عن Tafra Tech</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="message"><i class="fas fa-comment-dots" aria-hidden="true"></i> رسالتك</label>
+                    <textarea id="message" name="message" placeholder="اكتب استفسارك عن Clinic أو Digital Menu، واذكر طبيعة نشاطك والخدمات التي تحتاجها." required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-envelope" aria-hidden="true"></i> تجهيز رسالة بريد إلكتروني
+                </button>
+                <p class="form-note">النموذج يفتح مسودة في تطبيق البريد على جهازك. راجع الرسالة واضغط إرسال من هناك؛ لا يتم إرسالها تلقائيًا.</p>
+                <div id="formStatus" class="form-status" role="status" aria-live="polite"></div>
+            </form>
+            <div class="info-email">
+                <i class="fas fa-inbox" aria-hidden="true"></i> أو راسلنا مباشرة على:
+                <a href="mailto:info.tafratech@gmail.com">info.tafratech@gmail.com</a>
+            </div>
+        </div>
+    </div>
+
+    </main>
+    <footer class="footer">
+        <p>© <span id="currentYear"></span> Tafra Tech - حلول برمجية متطورة | جميع الحقوق محفوظة</p>
+        <p style="margin-top: 8px;">
+            <i class="fas fa-envelope" aria-hidden="true"></i> <a href="mailto:info.tafratech@gmail.com">info.tafratech@gmail.com</a> &nbsp;|&nbsp;
+            <i class="fas fa-globe" aria-hidden="true"></i> <a href="https://tafratech.com">tafratech.com</a>
+        </p>
+    </footer>
+</div>
+
+<script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+    const contactForm = document.getElementById('contactForm');
+    const statusDiv = document.getElementById('formStatus');
+    const projectInput = document.getElementById('projectInterest');
+    const projectNames = {
+        clinic: 'Clinic — إدارة العيادات',
+        'digital-menu': 'Digital Menu — المطاعم والكافيهات',
+        general: 'Tafra Tech — استفسار عام'
+    };
+
+    document.querySelectorAll('[data-project]').forEach(link => {
+        link.addEventListener('click', () => { projectInput.value = link.dataset.project; });
+    });
+
+    document.querySelectorAll('#pricing a[href="#contact"]:not([data-project]), #services a[href="#contact"]').forEach(link => {
+        link.addEventListener('click', () => { projectInput.value = 'clinic'; });
+    });
+
+    contactForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('fullname').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const message = document.getElementById('message').value.trim();
+
+        if (!name || !email || !message || !projectNames[projectInput.value]) {
+            statusDiv.textContent = 'الرجاء تعبئة الاسم والبريد الإلكتروني والمشروع والرسالة.';
+            return;
+        }
+        const emailPattern = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            statusDiv.textContent = 'البريد الإلكتروني غير صحيح.';
+            return;
+        }
+
+        const project = projectNames[projectInput.value];
+        const subject = `استفسار عن ${project} - ${name}`;
+        const body = `المشروع: ${project}\nالاسم: ${name}\nالبريد الإلكتروني: ${email}\nالهاتف: ${phone || 'غير مدخل'}\n\nرسالة العميل:\n${message}\n\n--\nمن نموذج تواصل Tafra Tech`;
+        const mailtoLink = `mailto:info.tafratech@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
+        statusDiv.textContent = 'أكمل إرسال الرسالة من تطبيق البريد الإلكتروني. لو لم يفتح، راسلنا مباشرة على info.tafratech@gmail.com.';
+    });
+</script>
+
+</body>
+</html>

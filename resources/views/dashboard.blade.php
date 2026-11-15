@@ -2,7 +2,9 @@
 @section('title','لوحة المطعم')
 @section('content')
 @php
+    $imageMenu = $restaurant->usesImageMenu();
     $shortcuts = array_filter([
+        'image_menu' => $imageMenu ? ['dashboard.menu-images.index', 'رفع صور المنيو'] : ['dashboard.menu-mode.edit', 'نوع المنيو'],
         'cashier' => ['dashboard.cashier.index', 'فتح الكاشير'],
         'menu_pages' => ['dashboard.menu-pages.create', 'إنشاء صفحة منيو'],
         'categories' => ['dashboard.categories.index', 'إدارة التصنيفات'],

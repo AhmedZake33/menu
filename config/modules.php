@@ -45,6 +45,12 @@ return [
             'icon' => 'bi-images',
             'default' => true,
         ],
+        'image_menu' => [
+            'label' => 'المنيو بالصور',
+            'description' => 'خيار رفع صور المنيو الخاصة بالعميل وعرضها على الرابط والـ QR بدل المنيو الرقمي. إيقافه يرجع العميل للمنيو الرقمي.',
+            'icon' => 'bi-images',
+            'default' => true,
+        ],
         'theme' => [
             'label' => 'تصميم المنيو',
             'description' => 'ألوان وتخطيط كل صفحة منيو.',
@@ -110,6 +116,33 @@ return [
     'limits' => [
         'max_menu_pages' => 'أقصى عدد لصفحات المنيو',
         'max_items' => 'أقصى عدد للأصناف',
+        'max_menu_images' => 'أقصى عدد لصور المنيو',
+    ],
+
+    /*
+    | How a client's public link shows the menu. "digital" is the full menu built in the
+    | dashboard; "images" shows pictures the client uploads (a scanned or designed menu).
+    | Sections in "digital_only" belong to the digital menu, so they are hidden and their
+    | URLs answer 404 while a client is on the image menu. Nothing is deleted by switching.
+    */
+    'menu_modes' => [
+        'digital' => 'المنيو الرقمي',
+        'images' => 'منيو بالصور',
+    ],
+    'digital_only' => ['menu_pages', 'categories', 'items', 'theme', 'offers', 'orders', 'reservations', 'cashier'],
+
+    /*
+    | Self-service sign-up (/register). A restaurant that signs up gets a free trial that
+    | ends on its own: the subscription date is set to today + trial_days, and once it
+    | passes the dashboard and the public menu close exactly as for any expired client.
+    | Set SIGNUP_ENABLED=false to close sign-up.
+    */
+    'signup' => [
+        'enabled' => (bool) env('SIGNUP_ENABLED', true),
+        'trial_days' => (int) env('SIGNUP_TRIAL_DAYS', 30),
+        // Menu pictures a new account may upload. The admin changes it per client afterwards
+        // (client settings > حدود الاشتراك); 0 there means unlimited.
+        'max_menu_images' => (int) env('SIGNUP_MAX_MENU_IMAGES', 5),
     ],
 
     'payment_methods' => [

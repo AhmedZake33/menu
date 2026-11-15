@@ -17,7 +17,12 @@
         <tbody>
         @forelse($restaurants as $r)
             <tr>
-                <td><strong>{{ $r->name }}</strong><small class="d-block text-muted" dir="ltr">/{{ $r->slug }}</small></td>
+                <td>
+                    <strong>{{ $r->name }}</strong>
+                    @if($r->isTrial())<span class="badge bg-info text-dark">تجربة</span>@endif
+                    @if($r->usesImageMenu())<span class="badge bg-light text-dark border">منيو بالصور</span>@endif
+                    <small class="d-block text-muted" dir="ltr">/{{ $r->slug }}</small>
+                </td>
                 <td>
                     @if($r->isExpired())
                         <span class="badge bg-danger">منتهي</span><small class="d-block text-danger">{{ $r->expires_at->format('Y/m/d h:i A') }}</small>

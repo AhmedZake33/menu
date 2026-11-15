@@ -13,7 +13,12 @@ class BlockUploadsWithoutFilesModule
      */
     public function handle(Request $request, Closure $next)
     {
-        if ($request->allFiles() && ! $request->user()?->restaurant?->hasModule('files')) {
+        $restaurant = $request->user()?->restaurant;
+
+        // The image menu is its own paid option, so its uploads do not depend on "files".
+        $imageMenuUpload = $request->routeIs('dashboard.menu-images.*') && $restaurant?->hasModule('image_menu');
+
+        if ($request->allFiles() && ! $imageMenuUpload && ! $restaurant?->hasModule('files')) {
             abort(403, 'رفع الملفات غير متاح في اشتراك هذا المطعم.');
         }
 

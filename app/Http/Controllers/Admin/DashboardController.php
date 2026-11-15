@@ -16,6 +16,7 @@ class DashboardController extends Controller
         return view('admin.dashboard', ['stats' => [
             'المطاعم' => Restaurant::count(),
             'المطاعم النشطة' => Restaurant::where('is_active', true)->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>', now()))->count(),
+            'تجارب مجانية جارية' => Restaurant::where('settings->trial', true)->whereNotNull('expires_at')->where('expires_at', '>', now())->count(),
             'الاشتراكات المنتهية' => Restaurant::whereNotNull('expires_at')->where('expires_at', '<=', now())->count(),
             'صفحات المنيو' => MenuPage::count(),
             'التصنيفات' => Category::count(),
@@ -28,6 +29,10 @@ class DashboardController extends Controller
     {
         $r = request()->user()->restaurant;
 
-        return view('dashboard', ['restaurant' => $r, 'stats' => ['صفحات المنيو' => $r->menuPages()->count(), 'التصنيفات' => $r->categories()->count(), 'الأصناف' => $r->items()->count(), 'المشاهدات' => $r->menuViews()->count()]]);
+        $stats = $r->usesImageMenu()
+            ? ['صور المنيو' => $r->menuImages()->count(), 'المشاهدات' => $r->menuViews()->count()]
+            : ['صفحات المنيو' => $r->menuPages()->count(), 'التصنيفات' => $r->categories()->count(), 'الأصناف' => $r->items()->count(), 'المشاهدات' => $r->menuViews()->count()];
+
+        return view('dashboard', ['restaurant' => $r, 'stats' => $stats]);
     }
 }

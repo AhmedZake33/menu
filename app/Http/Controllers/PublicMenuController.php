@@ -15,6 +15,10 @@ class PublicMenuController extends Controller
     {
         abort_unless($restaurant->isAvailable() && $restaurant->hasModule('public_menu'), 404);
 
+        if ($restaurant->usesImageMenu()) {
+            return $this->renderImageMenu($restaurant);
+        }
+
         $menuPage = $restaurant->menuPages()
             ->where('is_active', true)
             ->where('is_default', true)
@@ -31,7 +35,35 @@ class PublicMenuController extends Controller
     {
         abort_unless($restaurant->isAvailable() && $restaurant->hasModule('public_menu') && $menuPage->is_active && $menuPage->restaurant_id === $restaurant->id, 404);
 
+        // Old links and QR codes to a digital page keep working: they land on the picture menu.
+        if ($restaurant->usesImageMenu()) {
+            return redirect()->route('public.restaurant', $restaurant);
+        }
+
         return $this->renderMenu($restaurant, $menuPage);
+    }
+
+    private function renderImageMenu(Restaurant $restaurant)
+    {
+        MenuView::create(['restaurant_id' => $restaurant->id, 'menu_page_id' => null, 'ip_address' => request()->ip(), 'user_agent' => request()->userAgent(), 'referrer' => request()->headers->get('referer'), 'viewed_at' => now()]);
+
+        return view('public.menu-images', [
+            'restaurant' => $restaurant,
+            'images' => $restaurant->menuImages()->get(),
+            'mapDirectionsUrl' => $this->mapDirectionsUrl($restaurant),
+        ]);
+    }
+
+    private function mapDirectionsUrl(Restaurant $restaurant): ?string
+    {
+        $mapCoordinates = $restaurant->map_latitude && $restaurant->map_longitude
+            ? $restaurant->map_latitude.','.$restaurant->map_longitude
+            : null;
+        $mapQuery = $mapCoordinates ?: trim($restaurant->address ?: $restaurant->name);
+
+        return $mapCoordinates
+            ? 'https://www.google.com/maps/dir/?api=1&destination='.rawurlencode($mapCoordinates)
+            : ($restaurant->map_url ?: ($mapQuery ? 'https://www.google.com/maps/dir/?api=1&destination='.rawurlencode($mapQuery) : null));
     }
 
     private function renderMenu(Restaurant $restaurant, MenuPage $menuPage)
@@ -42,13 +74,7 @@ class PublicMenuController extends Controller
             ->orderByDesc('is_default')
             ->orderBy('sort_order')
             ->get();
-        $mapCoordinates = $restaurant->map_latitude && $restaurant->map_longitude
-            ? $restaurant->map_latitude.','.$restaurant->map_longitude
-            : null;
-        $mapQuery = $mapCoordinates ?: trim($restaurant->address ?: $restaurant->name);
-        $mapDirectionsUrl = $mapCoordinates
-            ? 'https://www.google.com/maps/dir/?api=1&destination='.rawurlencode($mapCoordinates)
-            : ($restaurant->map_url ?: ($mapQuery ? 'https://www.google.com/maps/dir/?api=1&destination='.rawurlencode($mapQuery) : null));
+        $mapDirectionsUrl = $this->mapDirectionsUrl($restaurant);
 
         MenuView::create(['restaurant_id' => $restaurant->id, 'menu_page_id' => $menuPage->id, 'ip_address' => request()->ip(), 'user_agent' => request()->userAgent(), 'referrer' => request()->headers->get('referer'), 'viewed_at' => now()]);
 

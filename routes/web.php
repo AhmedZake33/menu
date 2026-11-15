@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\RestaurantController;
 use App\Http\Controllers\Dashboard\CashierController;
 use App\Http\Controllers\Dashboard\CategoryController;
 use App\Http\Controllers\Dashboard\ItemController;
+use App\Http\Controllers\Dashboard\MenuImageController;
+use App\Http\Controllers\Dashboard\MenuModeController;
 use App\Http\Controllers\Dashboard\MenuOrderController;
 use App\Http\Controllers\Dashboard\MenuPageController;
 use App\Http\Controllers\Dashboard\OfferController;
@@ -46,6 +48,14 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('restaurant-settings/details', [RestaurantSettingsController::class, 'show'])->name('restaurant-settings.show');
             Route::get('restaurant-settings', [RestaurantSettingsController::class, 'edit'])->name('restaurant-settings.edit');
             Route::put('restaurant-settings', [RestaurantSettingsController::class, 'update'])->name('restaurant-settings.update');
+        });
+        Route::middleware('module:image_menu')->group(function () {
+            Route::get('menu-mode', [MenuModeController::class, 'edit'])->name('menu-mode.edit');
+            Route::put('menu-mode', [MenuModeController::class, 'update'])->name('menu-mode.update');
+            Route::get('menu-images', [MenuImageController::class, 'index'])->name('menu-images.index');
+            Route::post('menu-images', [MenuImageController::class, 'store'])->name('menu-images.store');
+            Route::patch('menu-images/{menuImage}/move', [MenuImageController::class, 'move'])->name('menu-images.move');
+            Route::delete('menu-images/{menuImage}', [MenuImageController::class, 'destroy'])->name('menu-images.destroy');
         });
         Route::resource('menu-pages', MenuPageController::class)->except('show')->parameters(['menu-pages' => 'menuPage'])->middleware('module:menu_pages');
         Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('module:categories');

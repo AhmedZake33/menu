@@ -14,9 +14,11 @@
     $homeUrl = $isSuperAdmin ? route('admin.dashboard') : route('dashboard.home');
 
     // Sidebar entries for a client: [module, route, active patterns, label].
-    // An entry is rendered only when the client has that module.
+    // An entry is rendered only when the client has that module (and, when given, the 5th check passes).
     $tenantNav = [
         'المنيو' => [
+            ['image_menu', 'dashboard.menu-mode.edit', ['dashboard.menu-mode.*'], 'نوع المنيو'],
+            ['image_menu', 'dashboard.menu-images.index', ['dashboard.menu-images.*'], 'صور المنيو', fn ($tenant) => $tenant->usesImageMenu()],
             ['menu_pages', 'dashboard.menu-pages.index', ['dashboard.menu-pages.*', 'dashboard.theme.*', 'dashboard.qr'], 'صفحات المنيو'],
             ['categories', 'dashboard.categories.index', ['dashboard.categories.*'], 'التصنيفات'],
             ['items', 'dashboard.items.index', ['dashboard.items.*'], 'الأصناف'],
@@ -56,7 +58,7 @@
                 @else
                     <a class="{{ request()->routeIs('dashboard.home') ? 'active' : '' }}" href="{{ route('dashboard.home') }}"><i class="bi bi-house"></i> الرئيسية</a>
                     @foreach($tenantNav as $groupTitle => $entries)
-                        @php($visible = array_filter($entries, fn ($entry) => $tenant->hasModule($entry[0])))
+                        @php($visible = array_filter($entries, fn ($entry) => $tenant->hasModule($entry[0]) && (! isset($entry[4]) || $entry[4]($tenant))))
                         @continue(! $visible)
                         <div class="panel-nav-title">{{ $groupTitle }}</div>
                         @foreach($visible as [$module, $routeName, $patterns, $label])
@@ -92,6 +94,16 @@
         </header>
 
         <main id="panelContent" class="panel-content-shell" data-panel-content>
+            @if($tenant && ($daysLeft = $tenant->daysLeft()) !== null && ($tenant->isTrial() || $daysLeft <= 7))
+                <div class="alert {{ $daysLeft <= 3 ? 'alert-warning' : 'alert-info' }} d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span>
+                        <i class="bi bi-hourglass-split"></i>
+                        @if($tenant->isTrial()) أنت في الفترة التجريبية المجانية. @else اشتراكك قارب على الانتهاء. @endif
+                        @if($daysLeft > 0) متبقي <strong>{{ $daysLeft }}</strong> يوم (حتى {{ $tenant->expires_at->format('Y/m/d') }}). @endif
+                    </span>
+                    <a class="btn btn-sm btn-primary" href="{{ config('marketing.contact_url') }}" target="_blank" rel="noopener">تواصل معنا للاشتراك</a>
+                </div>
+            @endif
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif

@@ -40,11 +40,28 @@ class Restaurant extends Model
     }
 
     /**
-     * Whether this client has a module. Anything not listed in config/modules.php is
-     * off. "orders" lives in the ordering_enabled column, which the public menu
-     * already reads, so there is a single source of truth for it.
+     * Whether this client can use a module right now. Anything not listed in
+     * config/modules.php is off, and so is every digital-menu section while the client
+     * is on the image menu (their data is kept and comes back when they switch).
      */
     public function hasModule(string $key): bool
+    {
+        if ($this->usesImageMenu() && in_array($key, config('modules.digital_only', []), true)) {
+            return false;
+        }
+
+        return $this->moduleEnabled($key);
+    }
+
+    /**
+     * What the admin switched on for this client, ignoring the menu mode. The admin form
+     * and subscription summaries read this so that browsing a client who is on the image
+     * menu never saves the hidden digital sections as "off".
+     *
+     * "orders" lives in the ordering_enabled column, which the public menu already reads,
+     * so there is a single source of truth for it.
+     */
+    public function moduleEnabled(string $key): bool
     {
         $definition = config("modules.list.$key");
 
@@ -69,7 +86,29 @@ class Restaurant extends Model
     /** @return array<string, bool> */
     public function moduleStates(): array
     {
-        return collect(config('modules.list'))->map(fn ($definition, $key) => $this->hasModule($key))->all();
+        return collect(config('modules.list'))->map(fn ($definition, $key) => $this->moduleEnabled($key))->all();
+    }
+
+    /** Whether the public link shows uploaded menu pictures instead of the digital menu. */
+    public function usesImageMenu(): bool
+    {
+        return $this->menu_mode === 'images' && $this->moduleEnabled('image_menu');
+    }
+
+    /** A client created through /register, still on the free trial the sign-up gave it. */
+    public function isTrial(): bool
+    {
+        return (bool) data_get($this->settings, 'trial', false);
+    }
+
+    /** Whole days left on the subscription, or null when it never expires. */
+    public function daysLeft(): ?int
+    {
+        if (! $this->expires_at) {
+            return null;
+        }
+
+        return $this->expires_at->isPast() ? 0 : (int) ceil(now()->floatDiffInDays($this->expires_at));
     }
 
     /**
@@ -227,5 +266,10 @@ class Restaurant extends Model
     public function offers()
     {
         return $this->hasMany(Offer::class);
+    }
+
+    public function menuImages()
+    {
+        return $this->hasMany(MenuImage::class)->orderBy('sort_order')->orderBy('id');
     }
 }

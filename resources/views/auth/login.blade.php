@@ -54,6 +54,13 @@
         </button>
     </form>
 
+    @if(config('modules.signup.enabled') && Route::has('register'))
+        <div class="text-center mt-4">
+            <span class="text-muted">عندك مطعم أو كافيه ولسه ما سجلتش؟</span>
+            <a class="fw-semibold text-decoration-none" href="{{ route('register') }}">سجّل مجانًا لمدة {{ config('modules.signup.trial_days') }} يوم</a>
+        </div>
+    @endif
+
     <div class="auth-divider"><span>دخول آمن ومحمي</span></div>
     <div class="auth-security-row">
         <span><i class="bi bi-shield-lock-fill"></i> اتصال مشفر</span>

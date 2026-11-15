@@ -56,9 +56,9 @@ class RestaurantController extends Controller
         $data['google_place_id'] = filled($data['google_place_id'] ?? null)
             ? $data['google_place_id']
             : app(GooglePlaceService::class)->resolve($data['map_url'] ?? $restaurant->map_url);
-        $oldValues = $restaurant->only(['modules', 'settings', 'ordering_enabled', 'is_active']);
+        $oldValues = $restaurant->only(['modules', 'settings', 'ordering_enabled', 'is_active', 'menu_mode']);
         $restaurant->update([...collect($data)->only(['name', 'slug', 'email', 'expires_at', 'map_url', 'google_place_id'])->all(), 'is_active' => $request->boolean('is_active'), ...$this->clientSettings($request, $restaurant)]);
-        ActivityLog::create(['user_id' => $request->user()->id, 'restaurant_id' => $restaurant->id, 'action' => 'restaurant.client-settings.updated', 'subject_type' => Restaurant::class, 'subject_id' => $restaurant->id, 'old_values' => $oldValues, 'new_values' => $restaurant->only(['modules', 'settings', 'ordering_enabled', 'is_active']), 'ip_address' => $request->ip()]);
+        ActivityLog::create(['user_id' => $request->user()->id, 'restaurant_id' => $restaurant->id, 'action' => 'restaurant.client-settings.updated', 'subject_type' => Restaurant::class, 'subject_id' => $restaurant->id, 'old_values' => $oldValues, 'new_values' => $restaurant->only(['modules', 'settings', 'ordering_enabled', 'is_active', 'menu_mode']), 'ip_address' => $request->ip()]);
 
         return back()->with('success', 'تم حفظ التغييرات.');
     }
@@ -67,6 +67,7 @@ class RestaurantController extends Controller
     private function clientRules(): array
     {
         return [
+            'menu_mode' => ['nullable', Rule::in(array_keys(config('modules.menu_modes')))],
             'modules' => 'nullable|array',
             'modules.*' => 'boolean',
             // White text sits on this colour, so one too light to read on is refused.
@@ -108,6 +109,10 @@ class RestaurantController extends Controller
             }
             $out['modules'] = $modules;
             $out['ordering_enabled'] = $modules['orders'];
+        }
+
+        if ($request->filled('menu_mode')) {
+            $out['menu_mode'] = $request->input('menu_mode');
         }
 
         $settings = $restaurant->settings ?? [];
